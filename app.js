@@ -2,6 +2,8 @@ const debug = require('debug')('webex-rss:app');
 const Watcher = require('feed-watcher');
 const dotenv = require('dotenv');
 const Webex = require('webex');
+const JiraClient = require('jira-connector');
+const TurndownService = require('turndown');
 
 // Load ENV if not present
 if (!process.env.WEBEX_CLIENT_ID) {
@@ -34,6 +36,26 @@ try {
   process.exit(2);
 }
 
+// Load JIRA Connector if configured
+let jira = false;
+if (process.env.JIRA_SITE) {
+  try {
+    jira = new JiraClient({
+      host: process.env.JIRA_SITE,
+      strictSSL: true,
+      basic_auth: {
+        base64: process.env.JIRA_BASE64,
+      },
+    });
+  } catch (error) {
+    debug('Error loading JIRA Connector');
+    debug(error);
+  }
+}
+
+// Load Turndown for HTML to Markdown
+const toMd = new TurndownService();
+
 // Define RSS Feeds
 const incidentFeed = 'https://status.webex.com/history.rss';
 const announcementFeed = 'https://status.webex.com/maintenance.rss';
@@ -42,6 +64,113 @@ const announcementFeed = 'https://status.webex.com/maintenance.rss';
 const interval = process.env.RSS_INTERVAL || 60;
 const incidentWatcher = new Watcher(incidentFeed, interval);
 const announcementWatcher = new Watcher(announcementFeed, interval);
+
+async function searchJira(identifier) {
+  debug('searchJira');
+  // Search for Existing JIRA matching the Identifier
+  try {
+    const jiraIdentifier = process.env.JIRA_IDENTIFIER_NAME;
+    const jql = `${jiraIdentifier} ~ "\\"${identifier}\\""`;
+    const response = await jira.search.search({ method: 'POST', jql });
+    switch (response.total) {
+      case 0:
+        debug('no existing issue');
+        return false;
+      case 1:
+        debug(`matching issue - ${response.issues[0].key}`);
+        // debug(response.issues[0]);
+        return response.issues[0].key;
+      default:
+        debug('more than one matching, abort.');
+        return null;
+    }
+  } catch (error) {
+    debug(error);
+    return null;
+  }
+}
+
+async function raiseJira(content) {
+  debug('raiseJira');
+
+  const jiraProject = process.env.JIRA_PROJECT;
+  const jiraIssue = process.env.JIRA_ISSUE;
+  const jiraIdentifier = process.env.JIRA_IDENTIFIER_FIELD;
+
+  let prefix;
+  switch (content.type) {
+    case 'incident':
+      prefix = '[INC] ';
+      break;
+    case 'maintenance':
+      prefix = '[MAINT] ';
+      break;
+    case 'announcement':
+      prefix = '[ANN] ';
+      break;
+    default:
+  }
+
+  let markdown = toMd.turndown(content.description);
+  markdown = markdown.replace(/\n/g, '\\n');
+  markdown = markdown.replace(/\\-/g, '-');
+
+  const bodyData = `
+  {
+    "update": {},
+    "fields": {
+      "summary": "${prefix}${content.title}",
+      "project": {
+        "key": "${jiraProject}"
+      },
+      "issuetype": {
+        "name": "${jiraIssue}"
+      },
+      "description": "${markdown}",
+      "${jiraIdentifier}": "${content.guid}",
+      "labels": [
+        "${content.type}"
+      ]
+    }
+  }`;
+
+  debug(bodyData);
+  debug(JSON.parse(bodyData));
+
+  // return;
+
+  try {
+    const response = await jira.issue.createIssue(JSON.parse(bodyData));
+    debug(`JIRA ${response.id} raised`);
+    return response.id;
+  } catch (error) {
+    debug(error);
+    return null;
+  }
+}
+
+async function commentJira(issueKey, content) {
+  debug('commentJira');
+
+  let markdown = toMd.turndown(content.description);
+  markdown = markdown.replace(/\n/g, '\\n');
+  markdown = markdown.replace(/\\-/g, '-');
+
+  const bodyData = `
+  {
+    "issueKey": "${issueKey}",
+    "body": "${markdown}"
+  }`;
+
+  try {
+    await jira.issue.addComment(JSON.parse(bodyData));
+    debug(`JIRA ${issueKey} updated`);
+    return issueKey;
+  } catch (error) {
+    debug(error);
+    return null;
+  }
+}
 
 async function parseCluster(content) {
   const clusters = [];
@@ -209,6 +338,21 @@ async function postMessage(roomId, html) {
     });
 }
 
+async function processJira(content) {
+  let response;
+  response = await searchJira(content.guid);
+  switch (response) {
+    case false:
+      response = await raiseJira(content);
+      break;
+    case null:
+      break;
+    default:
+      response = await commentJira(response, content);
+  }
+  return response;
+}
+
 async function parseMaintenance(item, status) {
   const output = {};
   debug('EVENT: MAINTENANCE');
@@ -263,6 +407,11 @@ async function parseMaintenance(item, status) {
   }
   html += `<br><br>${output.description}`;
 
+  if (jira) {
+    const response = await processJira(output);
+    debug(`JIRA PROCESSED ${response}`);
+  }
+
   await postMessage(process.env.MAINT_ROOM, html);
 }
 
@@ -302,6 +451,11 @@ async function parseIncident(item, status) {
   }
   html += `<br><br>${output.description}`;
 
+  if (jira) {
+    const response = await processJira(output);
+    debug(`JIRA PROCESSED ${response}`);
+  }
+
   await postMessage(process.env.INC_ROOM, html);
 }
 
@@ -326,6 +480,11 @@ async function parseAnnouncement(item) {
     }
   }
   html += `${output.description}`;
+
+  if (jira) {
+    const response = await processJira(output);
+    debug(`JIRA PROCESSED ${response}`);
+  }
 
   await postMessage(process.env.ANNOUNCE_ROOM, html);
 }
@@ -382,6 +541,13 @@ announcementWatcher.on('error', (error) => {
 async function init() {
   const bot = await webex.people.get('me');
   debug(`Bot Loaded: ${bot.displayName} (${bot.emails[0]})`);
+  try {
+    const jiraProject = await jira.project.getProject(process.env.JIRA_PROJECT);
+    debug(`JIRA Project: ${jiraProject[0].name}`);
+  } catch (error) {
+    debug('Unable to verify JIRA Project');
+    jira = false;
+  }
   try {
     const incRoom = await webex.rooms.get(process.env.INC_ROOM);
     debug(`Inc Room: ${incRoom.title}`);
