@@ -9,8 +9,6 @@ You can also optionally define a filter to limit based on a specific/set of clus
 1. Register a Bot at [Webex Developers](https://developer.webex.com/my-apps) for your Organisation
 2. Build and Deploy Docker Container (or deploy to Cloud)
 
-Node command to create a secret - `node -e "console.log(crypto.randomBytes(32).toString('hex'))"`
-
 ```
 > docker build --tag webex-rss .
 > docker create --name webex-rss \
@@ -22,7 +20,7 @@ Node command to create a secret - `node -e "console.log(crypto.randomBytes(32).t
   webex-rss
 ```
 
-3. Verify dockers logs to ensure bot as started successfully.
+3. Verify docker logs to ensure bot as started successfully.
 
 ## Support
 
