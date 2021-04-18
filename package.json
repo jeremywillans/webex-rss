@@ -1,0 +1,23 @@
+{
+  "name": "webex-rss",
+  "version": "1.0.0",
+  "description": "",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "export DEBUG=webex-rss* && nodemon app.js"
+  },
+  "author": "Jeremy Willans",
+  "license": "MIT",
+  "devDependencies": {
+    "eslint": "^7.23.0",
+    "eslint-config-airbnb-base": "^14.2.1",
+    "eslint-plugin-import": "^2.22.1"
+  },
+  "dependencies": {
+    "debug": "^4.3.1",
+    "dotenv": "^8.2.0",
+    "feed-watcher": "^0.2.1",
+    "webex": "^1.118.14"
+  }
+}
