@@ -5,14 +5,17 @@
   "main": "app.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "export DEBUG=webex-rss* && nodemon app.js"
+    "debug": "export DEBUG=webex-rss* && nodemon app.js",
+    "dev": "export DEBUG=webex-rss* && nodemon app_dev.js",
+    "clearjira": "export DEBUG=webex-rss* && node clearjira.js"
   },
   "author": "Jeremy Willans",
   "license": "MIT",
   "devDependencies": {
     "eslint": "^7.23.0",
     "eslint-config-airbnb-base": "^14.2.1",
-    "eslint-plugin-import": "^2.22.1"
+    "eslint-plugin-import": "^2.22.1",
+    "rss-feed-emitter": "^3.2.2"
   },
   "dependencies": {
     "debug": "^4.3.1",
@@ -20,6 +23,6 @@
     "feed-watcher": "^0.2.1",
     "jira-connector": "^3.1.0",
     "turndown": "^7.0.0",
-    "webex": "^1.118.14"
+    "webex": "^1.119.4"
   }
 }
