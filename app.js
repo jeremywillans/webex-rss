@@ -16,7 +16,7 @@ const incidentFeed = 'https://status.webex.com/history.rss';
 const announcementFeed = 'https://status.webex.com/maintenance.rss';
 
 // Load RSS Watcher Instances
-const interval = process.env.RSS_INTERVAL || 120;
+const interval = process.env.RSS_INTERVAL || 2;
 const incidentWatcher = new Watcher(incidentFeed, interval);
 const announcementWatcher = new Watcher(announcementFeed, interval);
 
