@@ -3,6 +3,8 @@ const debug = require('debug')('webex-rss:app');
 const RssFeedEmitter = require('rss-feed-emitter');
 const dotenv = require('dotenv');
 
+debug('Loading DEV File');
+
 // Load ENV if not present
 if (!process.env.WEBEX_CLIENT_ID) {
   debug('Load from .env');
