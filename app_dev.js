@@ -1,6 +1,9 @@
 const debug = require('debug')('webex-rss:app');
-const Watcher = require('feed-watcher');
+// eslint-disable-next-line import/no-extraneous-dependencies
+const RssFeedEmitter = require('rss-feed-emitter');
 const dotenv = require('dotenv');
+
+debug('Loading DEV File');
 
 // Load ENV if not present
 if (!process.env.WEBEX_CLIENT_ID) {
@@ -15,56 +18,62 @@ const parserService = require('./src/parserService');
 const incidentFeed = 'https://status.webex.com/history.rss';
 const announcementFeed = 'https://status.webex.com/maintenance.rss';
 
-// Load RSS Watcher Instances
-const interval = process.env.RSS_INTERVAL || 2;
-const incidentWatcher = new Watcher(incidentFeed, interval);
-const announcementWatcher = new Watcher(announcementFeed, interval);
+// Define Interval (default 2mins)
+const interval = process.env.RSS_INTERVAL * 1000 || 120000;
+
+// Disable Preload in Production
+let config;
+if (process.env.NODE_ENV === 'production') {
+  config = JSON.parse('{ "skipFirstLoad": true }');
+}
+
+// Load Feed Emitter
+const feeder = new RssFeedEmitter(config);
 
 // Process Incident Feed
-incidentWatcher.on('new entries', (entries) => {
-  entries.forEach((item) => {
-    // Identify Item Type
-    debug('new incident item');
-    const typeIndex = item.description.indexOf('<strong >');
-    if (typeIndex !== -1) {
-      const typeEnd = item.description.indexOf('</strong >', typeIndex);
-      const itemType = item.description.substring(typeIndex + 9, typeEnd);
-      debug(`detected as ${itemType}`);
-      switch (itemType) {
-        case 'scheduled':
-        case 'in progress':
-        case 'completed':
-          parserService.parseMaintenance(item, itemType);
-          break;
-        case 'resolved':
-        case 'monitoring':
-        case 'identified':
-        case 'investigating':
-          parserService.parseIncident(item, itemType);
-          break;
-        default:
-          debug('EVENT: UNKNOWN');
-          debug(item);
-      }
+feeder.on('incident', (item) => {
+  // Identify Item Type
+  debug('new incident item');
+  const typeIndex = item.description.indexOf('<strong >');
+  if (typeIndex !== -1) {
+    const typeEnd = item.description.indexOf('</strong >', typeIndex);
+    const itemType = item.description.substring(typeIndex + 9, typeEnd);
+    debug(`detected as ${itemType}`);
+    switch (itemType) {
+      case 'scheduled':
+      case 'in progress':
+      case 'completed':
+        parserService.parseMaintenance(item, itemType);
+        break;
+      case 'resolved':
+      case 'monitoring':
+      case 'identified':
+      case 'investigating':
+        parserService.parseIncident(item, itemType);
+        break;
+      default:
+        debug('EVENT: UNKNOWN');
+        debug(item);
     }
-  });
+  }
 });
 
 // Process Announcement Feed
-announcementWatcher.on('new entries', (entries) => {
-  entries.forEach((item) => {
-    debug('new announce item');
-    parserService.parseAnnouncement(item);
-  });
+feeder.on('announcement', (item) => {
+  // Discard Older Items from Announcement Feed
+  if (process.env.NODE_ENV !== 'production') {
+    const d = new Date();
+    d.setMonth(d.getMonth() - 1);
+    if (item.pubdate < d) {
+      return;
+    }
+  }
+  debug('new announce item');
+  parserService.parseAnnouncement(item);
 });
 
 // Handle Incident Feed Errors
-incidentWatcher.on('error', (error) => {
-  debug(error);
-});
-
-// Handle Announcement Feed Errors
-announcementWatcher.on('error', (error) => {
+feeder.on('error', (error) => {
   debug(error);
 });
 
@@ -100,8 +109,16 @@ async function init() {
     debug('ERROR: Bot is not a member of the Announcement Room!');
     process.exit(2);
   }
-  incidentWatcher.start();
-  announcementWatcher.start();
+  feeder.add({
+    url: incidentFeed,
+    refresh: interval,
+    eventName: 'incident',
+  });
+  feeder.add({
+    url: announcementFeed,
+    refresh: interval,
+    eventName: 'announcement',
+  });
   debug('Startup Complete!');
 }
 
@@ -111,8 +128,7 @@ init();
 // Handle Graceful Shutdown (CTRL+C)
 process.on('SIGINT', () => {
   debug('Stoppping...');
-  incidentWatcher.stop();
-  announcementWatcher.stop();
+  feeder.destroy();
   debug('Feeds Stopped.');
   process.exit(0);
 });
