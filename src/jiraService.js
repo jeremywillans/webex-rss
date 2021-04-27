@@ -53,8 +53,7 @@ function jiraService() {
           return false;
         case 1:
           debug(`matching issue - ${response.issues[0].key}`);
-          // debug(response.issues[0]);
-          return response.issues[0].key;
+          return response.issues[0];
         default:
           debug('more than one matching, abort.');
           return null;
@@ -109,27 +108,27 @@ function jiraService() {
     try {
       const response = await jira.issue.createIssue(JSON.parse(bodyData));
       debug(`JIRA ${response.id} raised`);
-      return response.id;
+      return response;
     } catch (error) {
       debug(error);
       return null;
     }
   }
 
-  async function commentJira(issueKey, content) {
+  async function commentJira(issue, content) {
     debug('commentJira');
 
     const markdown = await toMarkdown(content.description);
     const bodyData = `
         {
-          "issueKey": "${issueKey}",
+          "issueKey": "${issue.key}",
           "body": "${markdown}"
         }`;
 
     try {
       await jira.issue.addComment(JSON.parse(bodyData));
-      debug(`JIRA ${issueKey} updated`);
-      return issueKey;
+      debug(`JIRA ${issue.key} updated`);
+      return issue;
     } catch (error) {
       debug(error);
       return null;
@@ -148,6 +147,8 @@ function jiraService() {
       default:
         response = await commentJira(response, content);
     }
+    const protocol = process.env.JIRA_PROTOCOL || 'https';
+    response.url = `${protocol}://${process.env.JIRA_SITE}/browse/${response.key}`;
     return response;
   }
 
