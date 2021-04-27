@@ -127,7 +127,7 @@ init();
 
 // Handle Graceful Shutdown (CTRL+C)
 process.on('SIGINT', () => {
-  debug('Stoppping...');
+  debug('Stopping...');
   feeder.destroy();
   debug('Feeds Stopped.');
   process.exit(0);
