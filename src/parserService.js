@@ -31,11 +31,11 @@ function parserService() {
   async function parseCluster(content) {
     const clusters = [];
     // Webex Teams
-    // if (content.includes('Webex Teams')) {
+    // if (content.match(/\bWebex Teams\b/)) {
     //   clusters.push('Webex Teams');
     // }
     // Webex Meetings Clusters
-    if (content.includes('San Jose')) {
+    if (content.match(/\bSan Jose\b/)) {
       clusters.push('AC');
       clusters.push('AW');
       clusters.push('B');
@@ -47,71 +47,71 @@ function parserService() {
       clusters.push('S');
       clusters.push('U');
     }
-    if (content.includes('London')) {
+    if (content.match(/\bLondon\b/)) {
       clusters.push('AI');
       clusters.push('BI');
       clusters.push('I');
       clusters.push('W');
     }
-    if (content.includes('Virginia')) {
+    if (content.match(/\bVirginia\b/)) {
       clusters.push('AA');
       clusters.push('AB');
     }
-    if (content.includes('Singapore')) {
+    if (content.match(/\bSingapore\b/)) {
       clusters.push('AS');
     }
-    if (content.includes('FedRAMP')) {
+    if (content.match(/\bFedRAMP\b/)) {
       clusters.push('F');
     }
-    if (content.includes('Sydney')) {
+    if (content.match(/\bSydney\b/)) {
       clusters.push('AP');
     }
-    if (content.includes('AA')) {
+    if (content.match(/\bAA\b/)) {
       clusters.push('AA');
     }
-    if (content.includes('AB')) {
+    if (content.match(/\bAB\b/)) {
       clusters.push('AB');
     }
-    if (content.includes('AC')) {
+    if (content.match(/\bAC\b/)) {
       clusters.push('AC');
     }
-    if (content.includes('AO')) {
+    if (content.match(/\bAO\b/)) {
       clusters.push('AO');
     }
-    if (content.includes('AP')) {
+    if (content.match(/\bAP\b/)) {
       clusters.push('AP');
     }
-    if (content.includes('AS')) {
+    if (content.match(/\bAS\b/)) {
       clusters.push('AS');
     }
-    if (content.includes('AW')) {
+    if (content.match(/\bAW\b/)) {
       clusters.push('AW');
     }
     if (content.match(/\bB\b/)) {
       clusters.push('B');
     }
-    if (content.includes('BI')) {
+    if (content.match(/\bBI\b/)) {
       clusters.push('BI');
     }
-    if (content.includes('BY')) {
+    if (content.match(/\bBY\b/)) {
       clusters.push('BY');
     }
     if (content.match(/\bI\b/)) {
       clusters.push('I');
     }
-    if (content.includes('IB')) {
+    if (content.match(/\bIB\b/)) {
       clusters.push('IB');
     }
-    if (content.includes('IC')) {
+    if (content.match(/\bIC\b/)) {
       clusters.push('IC');
     }
-    if (content.includes('IE')) {
+    if (content.match(/\bIE\b/)) {
       clusters.push('IE');
     }
-    if (content.includes('IJ')) {
+    if (content.match(/\bIJ\b/)) {
       clusters.push('IJ');
     }
-    if (content.includes('IK')) {
+    if (content.match(/\bIK\b/)) {
       clusters.push('IJ');
     }
     if (content.match(/\bE\b/)) {
@@ -204,6 +204,10 @@ function parserService() {
     return incRoom;
   }
 
+  function toTitleCase(title) {
+    return title.replace(/\w\S*/g, (word) => word.charAt(0).toUpperCase() + word.substr(1).toLowerCase());
+  }
+
   async function parseMaintenance(item, status) {
     const output = {};
     debug('EVENT: MAINTENANCE');
@@ -244,9 +248,9 @@ function parserService() {
       output.title
     }</a></strong><blockquote class="${
       output.blockquote
-    }"><strong>Status: </strong>${status[0].toUpperCase()}${status.substring(
-      1,
-    )}`;
+    }"><strong>Status: </strong>${
+      toTitleCase(status)
+    }`;
     if (output.clusters.length > 0) {
       const clusters = output.clusters.join(', ');
       if (clusters.includes(',')) {
@@ -258,12 +262,12 @@ function parserService() {
     if (output.startTime && output.endTime) {
       html += `<br><strong>Start: </strong>${output.startTime}<br><strong>End: </strong>${output.endTime}`;
     }
-    html += `<br><br>${output.description}`;
-
     if (jiraService) {
       const response = await jiraService.processJira(output);
-      debug(`JIRA PROCESSED ${response}`);
+      const jiraType = toTitleCase(process.env.JIRA_ISSUE);
+      html += `<br><strong>JIRA ${jiraType}: </strong><a href=${response.url}>${response.key}</a>`;
     }
+    html += `<br><br>${output.description}`;
 
     await postMessage(process.env.MAINT_ROOM, html);
   }
@@ -293,9 +297,9 @@ function parserService() {
       output.title
     }</a></strong><blockquote class="${
       output.blockquote
-    }"><strong>Status: </strong>${status[0].toUpperCase()}${status.substring(
-      1,
-    )}`;
+    }"><strong>Status: </strong>${
+      toTitleCase(status)
+    }`;
     if (output.clusters.length > 0) {
       const clusters = output.clusters.join(', ');
       if (clusters.includes(',')) {
@@ -304,12 +308,12 @@ function parserService() {
         html += `<br><strong>Cluster: </strong>${output.clusters}`;
       }
     }
-    html += `<br><br>${output.description}`;
-
     if (jiraService) {
       const response = await jiraService.processJira(output);
-      debug(`JIRA PROCESSED ${response}`);
+      const jiraType = toTitleCase(process.env.JIRA_ISSUE);
+      html += `<br><strong>JIRA ${jiraType}: </strong><a href=${response.url}>${response.key}</a>`;
     }
+    html += `<br><br>${output.description}`;
 
     await postMessage(process.env.INC_ROOM, html);
   }
@@ -333,13 +337,13 @@ function parserService() {
         html += `<br><strong>Cluster: </strong>${output.clusters}`;
       }
     }
-    html += `<strong>Maintenance Calendar: </strong>${output.link}<br>`;
-    html += `${output.description}`;
-
+    html += `<strong>Maintenance Calendar: </strong>${output.link}`;
     if (jiraService) {
       const response = await jiraService.processJira(output);
-      debug(`JIRA PROCESSED ${response}`);
+      const jiraType = toTitleCase(process.env.JIRA_ISSUE);
+      html += `<br><strong>JIRA ${jiraType}: </strong><a href=${response.url}>${response.key}</a>`;
     }
+    html += `<br><br>${output.description}`;
 
     await postMessage(process.env.ANNOUNCE_ROOM, html);
   }
