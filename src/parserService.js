@@ -66,6 +66,14 @@ function parserService() {
     if (content.match(/\bSydney\b/)) {
       clusters.push('AP');
     }
+    if (content.match(/\bAustralia\b/)) {
+      clusters.push('AP');
+    }
+    if (content.match(/\bAPAC\b/)) {
+      clusters.push('AS');
+      clusters.push('AP');
+      clusters.push('BY');
+    }
     if (content.match(/\bAA\b/)) {
       clusters.push('AA');
     }
