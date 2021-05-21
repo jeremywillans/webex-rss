@@ -1,4 +1,4 @@
-const debug = require('debug')('webex-rss:clearjira');
+const debug = require('debug')('webex-rss:clearJira');
 const JiraClient = require('jira-connector');
 const dotenv = require('dotenv');
 
