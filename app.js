@@ -14,11 +14,13 @@ const parserService = require('./src/parserService');
 // Define RSS Feeds
 const incidentFeed = 'https://status.webex.com/history.rss';
 const announcementFeed = 'https://status.webex.com/maintenance.rss';
+const apiFeed = 'https://developer.webex.com/api/content/changelog/feed';
 
 // Load RSS Watcher Instances
 const interval = process.env.RSS_INTERVAL || 2;
 const incidentWatcher = new Watcher(incidentFeed, interval);
 const announcementWatcher = new Watcher(announcementFeed, interval);
+const apiWatcher = new Watcher(apiFeed, interval);
 
 // Process Incident Feed
 incidentWatcher.on('new entries', (entries) => {
@@ -58,6 +60,14 @@ announcementWatcher.on('new entries', (entries) => {
   });
 });
 
+// Process API Feed
+apiWatcher.on('new entries', (entries) => {
+  entries.forEach((item) => {
+    debug('new api item');
+    parserService.parseApi(item);
+  });
+});
+
 // Handle Incident Feed Errors
 incidentWatcher.on('error', (error) => {
   debug(error);
@@ -65,6 +75,11 @@ incidentWatcher.on('error', (error) => {
 
 // Handle Announcement Feed Errors
 announcementWatcher.on('error', (error) => {
+  debug(error);
+});
+
+// Handle API Feed Errors
+apiWatcher.on('error', (error) => {
   debug(error);
 });
 
@@ -100,8 +115,19 @@ async function init() {
     debug('ERROR: Bot is not a member of the Announcement Room!');
     process.exit(2);
   }
+  let apiEnabled = false;
+  try {
+    const apiRoom = await parserService.getRoom(process.env.ANNOUNCE_ROOM);
+    debug(`API Room: ${apiRoom.title}`);
+    apiEnabled = true;
+  } catch (error) {
+    debug('ERROR: Bot is not a member of the API Room!');
+  }
   incidentWatcher.start();
   announcementWatcher.start();
+  if (apiEnabled) {
+    apiWatcher.start();
+  }
   debug('Startup Complete!');
 }
 

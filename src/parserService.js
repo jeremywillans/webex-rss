@@ -356,6 +356,26 @@ function parserService() {
     await postMessage(process.env.ANNOUNCE_ROOM, html);
   }
 
+  async function parseApi(item) {
+    const output = {};
+    debug('EVENT: API');
+    output.title = item.title;
+    output.type = 'api';
+    output.description = item.description;
+    output.guid = item.guid.replace(/\r\n/g, '');
+    output.link = item.link;
+
+    let html = `<strong><a href='${output.link}'>${output.title}</a></strong><blockquote class="info">`;
+    if (jiraService && process.env.JIRA_API_LOG) {
+      const response = await jiraService.processJira(output);
+      const jiraType = toTitleCase(process.env.JIRA_ISSUE);
+      html += `<strong>JIRA ${jiraType}: </strong><a href=${response.url}>${response.key}</a><br>`;
+    }
+    html += `${output.description}`;
+
+    await postMessage(process.env.API_ROOM, html);
+  }
+
   return {
     parseCluster,
     formatDescription,
@@ -366,6 +386,7 @@ function parserService() {
     parseMaintenance,
     parseIncident,
     parseAnnouncement,
+    parseApi,
   };
 }
 
