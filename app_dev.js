@@ -2,6 +2,7 @@ const debug = require('debug')('webex-rss:appDev');
 // eslint-disable-next-line import/no-extraneous-dependencies
 const RssFeedEmitter = require('rss-feed-emitter');
 const dotenv = require('dotenv');
+const { bootstrap } = require('global-agent');
 
 debug('Loading DEV File');
 
@@ -9,6 +10,12 @@ debug('Loading DEV File');
 if (!process.env.WEBEX_CLIENT_ID) {
   debug('Load from .env');
   dotenv.config();
+}
+
+// Initialize Proxy Server, if defined.
+if (process.env.GLOBAL_AGENT_HTTP_PROXY) {
+  debug('invoke global agent proxy');
+  bootstrap();
 }
 
 let jiraService = require('./src/jiraService');

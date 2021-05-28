@@ -28,14 +28,18 @@ It provides the following functions
       -e INC_ROOM=room-id-for-incident-alerts-room \
       -e MAINT_ROOM=room-id-for-maintenance-alerts-room \
       -e ANNOUNCE_ROOM=room-id-for-announcement-alerts-room \
-      -e CLUSTER_FILTER=comma,separated,list,of,clients,to,monitor \
-      -e JIRA_SITE=site-fqdn-such-as-demo-dot-atlassian-dot-net \
-      -e JIRA_PROTOCOL=http-or-https \
-      -e JIRA_BASE64=username:api_token-base-64-encoded \
-      -e JIRA_PROJECT=jira-project-code-such-as-NOTIFY \
-      -e JIRA_ISSUE=jira-issue-type-such-as-Task \
-      -e JIRA_IDENTIFIER_FIELD=custom-field-name-such-as-customfield_10033 \
-      -e JIRA_IDENTIFIER_NAME=custom-field-label-such-as-Identifier \
+      (optional) -e API_ROOM=room-id-for-developer-api-alerts-room \
+      (optional) -e CLUSTER_FILTER=comma,separated,list,of,clients,to,monitor \
+      (optional) -e GLOBAL_AGENT_HTTP_PROXY=http://proxy-server-goes-here:proxy-port \
+      (optional) -e GLOBAL_AGENT_NO_PROXY='comma,separated,list,of,excluded,proxy,domains' \
+      (optional) -e JIRA_SITE=site-fqdn-such-as-demo-dot-atlassian-dot-net \
+      (optional) -e JIRA_PROTOCOL=http-or-https \
+      (optional) -e JIRA_BASE64=username:api_token-base-64-encoded \
+      (optional) -e JIRA_PROJECT=jira-project-code-such-as-NOTIFY \
+      (optional) -e JIRA_ISSUE=jira-issue-type-such-as-Task \
+      (optional) -e JIRA_IDENTIFIER_FIELD=custom-field-name-such-as-customfield_10033 \
+      (optional) -e JIRA_IDENTIFIER_NAME=custom-field-label-such-as-Identifier \
+      (optional) -e JIRA_API_LOG=set-to-true-to-log-developer-api-events-in-jira \
       webex-rss
     ```
     **Note** - JIRA Variables can be excluded if not using JIRA.

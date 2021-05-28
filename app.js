@@ -1,11 +1,18 @@
 const debug = require('debug')('webex-rss:app');
 const Watcher = require('feed-watcher');
 const dotenv = require('dotenv');
+const { bootstrap } = require('global-agent');
 
 // Load ENV if not present
 if (!process.env.WEBEX_CLIENT_ID) {
   debug('Load from .env');
   dotenv.config();
+}
+
+// Initialize Proxy Server, if defined.
+if (process.env.GLOBAL_AGENT_HTTP_PROXY) {
+  debug('invoke global agent proxy');
+  bootstrap();
 }
 
 let jiraService = require('./src/jiraService');
