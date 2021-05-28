@@ -40,11 +40,12 @@ It provides the following functions
       (optional) -e JIRA_IDENTIFIER_FIELD=custom-field-name-such-as-customfield_10033 \
       (optional) -e JIRA_IDENTIFIER_NAME=custom-field-label-such-as-Identifier \
       (optional) -e JIRA_API_LOG=set-to-true-to-log-developer-api-events-in-jira \
+      (optional) -e DEBUG=webex-rss* \
       webex-rss
     ```
-    **Note** - JIRA Variables can be excluded if not using JIRA.
+    **Note** - JIRA Variables can be excluded if not using JIRA, and DEBUG variable will output log data to the console.
 
-4. Verify docker logs to ensure bot as started successfully.
+4. Verify Docker logs to ensure bot as started successfully.
 
 ## Support
 

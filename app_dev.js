@@ -1,5 +1,4 @@
 const debug = require('debug')('webex-rss:appDev');
-// eslint-disable-next-line import/no-extraneous-dependencies
 const RssFeedEmitter = require('rss-feed-emitter');
 const dotenv = require('dotenv');
 const { bootstrap } = require('global-agent');
