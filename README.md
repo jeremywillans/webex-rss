@@ -19,31 +19,45 @@ It provides the following functions
     ```
     b. Add new or select existing field in JIRA for RSS Feed item unique identifier (used to match existing JIRA Tickets)
 
+3. Create Spaces for Output Messages in Webex App
+4. Obtain RoomId for each room (simply add astronaut@webex.com
+
 3. Build and Deploy Docker Container (or deploy to Cloud)
 
     ```
     > docker build --tag webex-rss .
     > docker create --name webex-rss \
-      -e TOKEN=bot-token-from-developer-dot-webex-dot-com \
-      -e INC_ROOM=room-id-for-incident-alerts-room \
-      -e MAINT_ROOM=room-id-for-maintenance-alerts-room \
-      -e ANNOUNCE_ROOM=room-id-for-announcement-alerts-room \
-      (optional) -e API_ROOM=room-id-for-developer-api-alerts-room \
-      (optional) -e CLUSTER_FILTER=comma,separated,list,of,clients,to,monitor \
-      (optional) -e GLOBAL_AGENT_HTTP_PROXY=http://proxy-server-goes-here:proxy-port \
-      (optional) -e GLOBAL_AGENT_NO_PROXY='comma,separated,list,of,excluded,proxy,domains' \
-      (optional) -e JIRA_SITE=site-fqdn-such-as-demo-dot-atlassian-dot-net \
-      (optional) -e JIRA_PROTOCOL=http-or-https \
-      (optional) -e JIRA_BASE64=username:api_token-base-64-encoded \
-      (optional) -e JIRA_PROJECT=jira-project-code-such-as-NOTIFY \
-      (optional) -e JIRA_ISSUE=jira-issue-type-such-as-Task \
-      (optional) -e JIRA_IDENTIFIER_FIELD=custom-field-name-such-as-customfield_10033 \
-      (optional) -e JIRA_IDENTIFIER_NAME=custom-field-label-such-as-Identifier \
-      (optional) -e JIRA_API_LOG=set-to-true-to-log-developer-api-events-in-jira \
-      (optional) -e DEBUG=webex-rss* \
+      -e _ENVIRONMENTAL_VARIABLE_ = _value_ \
       webex-rss
     ```
     **Note** - JIRA Variables can be excluded if not using JIRA, and DEBUG variable will output log data to the console.
+
+### Environmental Variables
+
+These variables can be individually defined in Docker, or loaded as an `.env` file in the `/app` directory.
+
+| Name | Type | Default | Description
+| ---- | ---- | ------- | -----------
+| TOKEN | **Required** | ` ` | Bot Token for Webex Messaging Posts
+| INC_ROOM | **Required** | ` ` | RoomId for Webex Incident Space
+| MAINT_ROOM | **Required** | ` ` | RoomId for Webex Maintenance Space
+| ANNOUNCE_ROOM | **Required** | ` ` | RoomId for Webex Announcement Space
+| API_ROOM | Optional | ` ` | RoomId for Webex Developer API Space
+| CLUSTER_FILTER | Optional | ` ` | Comma Separated List of Cluster Names to include.
+| GLOBAL_AGENT_HTTP_PROXY | Optional | ` ` | HTTP Proxy Setting
+| GLOBAL_AGENT_NO_PROXY | Optional | ` ` | Comma Separated List of excluded domains (Supports wildcards)
+| JIRA_SITE | Optional | ` ` | FQDN of JIRA Instance
+| JIRA_PROTOCOL | Optional | ` ` | Protocol used to access JIRA Interface
+| JIRA_SSL | Optional | `true` | Enables Strict SSL of the JIRA Server  
+| JIRA_BASE64 | Optional | ` ` | Base64 Encoded Result of `username:api_token`
+| JIRA_USERNAME | Optional | ` ` | JIRA Username for Authentication (instead of Base64)
+| JIRA_PASSWORD | Optional | ` ` | JIRA Password for Authentication (instead of Base64)
+| JIRA_PROJECT | Optional | ` ` | JIRA Project Code (eg. NOTIFY)
+| JIRA_ISSUE | Optional | ` ` | JIRA Issue Type (eg. Task)
+| JIRA_IDENTIFIER_FIELD | Optional | ` ` | JIRA Field Identifier to store RSS Post Unique ID
+| JIRA_IDENTIFIER_NAME | Optional | ` ` | JIRA Field Name to store RSS Post Unique ID
+| JIRA_API_LOG | Optional | `false` | Log JIRA Tickets for API Entries
+| DEBUG | Optional | ` ` | Output Debug Log Entries to console (set to `webex-rss*`)
 
 4. Verify Docker logs to ensure bot as started successfully.
 
