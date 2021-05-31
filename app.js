@@ -1,7 +1,9 @@
+/* eslint-disable no-console */
 const debug = require('debug')('webex-rss:app');
 const Watcher = require('feed-watcher');
 const dotenv = require('dotenv');
 const { bootstrap } = require('global-agent');
+const chalk = require('chalk');
 
 // Load ENV if not present
 if (!process.env.WEBEX_CLIENT_ID) {
@@ -43,13 +45,13 @@ incidentWatcher.on('new entries', (entries) => {
         case 'scheduled':
         case 'in progress':
         case 'completed':
-          parserService.parseMaintenance(item, itemType);
+          parserService.parseMaintenance(item, itemType, jiraService);
           break;
         case 'resolved':
         case 'monitoring':
         case 'identified':
         case 'investigating':
-          parserService.parseIncident(item, itemType);
+          parserService.parseIncident(item, itemType, jiraService);
           break;
         default:
           debug('EVENT: UNKNOWN');
@@ -63,7 +65,7 @@ incidentWatcher.on('new entries', (entries) => {
 announcementWatcher.on('new entries', (entries) => {
   entries.forEach((item) => {
     debug('new announce item');
-    parserService.parseAnnouncement(item);
+    parserService.parseAnnouncement(item, jiraService);
   });
 });
 
@@ -71,7 +73,7 @@ announcementWatcher.on('new entries', (entries) => {
 apiWatcher.on('new entries', (entries) => {
   entries.forEach((item) => {
     debug('new api item');
-    parserService.parseApi(item);
+    parserService.parseApi(item, jiraService);
   });
 });
 
@@ -92,50 +94,58 @@ apiWatcher.on('error', (error) => {
 
 // Init Function
 async function init() {
-  const bot = await parserService.getBot();
-  debug(`Bot Loaded: ${bot.displayName} (${bot.emails[0]})`);
+  try {
+    const bot = await parserService.getBot();
+    console.log(chalk.green(`Bot Loaded: ${bot.displayName} (${bot.emails[0]})`));
+  } catch (error) {
+    console.log(chalk.red('ERROR: Unable to load Webex Bot, check Token.'));
+    debug(error.message);
+    process.exit(2);
+  }
   try {
     const jiraProject = await jiraService.getProject(process.env.JIRA_PROJECT);
-    debug(`JIRA Project: ${jiraProject[0].name}`);
+    console.log(chalk.green(`JIRA Project: ${jiraProject[0].name}`));
   } catch (error) {
-    debug('Unable to verify JIRA Project');
+    console.log(chalk.yellow('WARN: Unable to verify JIRA Project'));
     jiraService = false;
+    debug(error.message);
   }
   try {
     const incRoom = await parserService.getRoom(process.env.INC_ROOM);
-    debug(`Inc Room: ${incRoom.title}`);
+    console.log(chalk.green(`Inc Room: ${incRoom.title}`));
   } catch (error) {
-    debug('ERROR: Bot is not a member of the Incident Room!');
+    console.log(chalk.red('ERROR: Bot is not a member of the Incident Room!'));
     process.exit(2);
   }
   try {
     const maintRoom = await parserService.getRoom(process.env.MAINT_ROOM);
-    debug(`Maint Room: ${maintRoom.title}`);
+    console.log(chalk.green(`Maint Room: ${maintRoom.title}`));
   } catch (error) {
-    debug('ERROR: Bot is not a member of the Maintenance Room!');
+    console.log(chalk.red('ERROR: Bot is not a member of the Maintenance Room!'));
     process.exit(2);
   }
   try {
     const announceRoom = await parserService.getRoom(process.env.ANNOUNCE_ROOM);
-    debug(`Announce Room: ${announceRoom.title}`);
+    // eslint-disable-next-line no-console
+    console.log(chalk.green(`Announce Room: ${announceRoom.title}`));
   } catch (error) {
-    debug('ERROR: Bot is not a member of the Announcement Room!');
+    console.log(chalk.red('ERROR: Bot is not a member of the Announcement Room!'));
     process.exit(2);
   }
   let apiEnabled = false;
   try {
-    const apiRoom = await parserService.getRoom(process.env.ANNOUNCE_ROOM);
+    const apiRoom = await parserService.getRoom(process.env.API_ROOM);
     debug(`API Room: ${apiRoom.title}`);
     apiEnabled = true;
   } catch (error) {
-    debug('ERROR: Bot is not a member of the API Room!');
+    console.log(chalk.yellow('WARN: Bot is not a member of the API Room!'));
   }
   incidentWatcher.start();
   announcementWatcher.start();
   if (apiEnabled) {
     apiWatcher.start();
   }
-  debug('Startup Complete!');
+  console.log(chalk.green('Startup Complete!'));
 }
 
 // Initiate

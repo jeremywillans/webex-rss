@@ -1,6 +1,7 @@
 const debug = require('debug')('webex-rss:parserService');
 const Webex = require('webex');
-const jiraService = require('./jiraService');
+const chalk = require('chalk');
+// const jiraService = require('./jiraService');
 
 // Load Webex SDK
 let webex;
@@ -11,7 +12,9 @@ try {
     },
   });
 } catch (error) {
-  debug('Unable to load Webex, aborting...');
+  // eslint-disable-next-line no-console
+  console.log(chalk.red('ERROR: Unable to load Webex Bot, check Token.'));
+  debug(error.message);
   process.exit(2);
 }
 
@@ -21,10 +24,13 @@ if (process.env.CLUSTER_FILTER) {
   try {
     clusterFilter = process.env.CLUSTER_FILTER.split(',');
   } catch (error) {
-    debug('unable to parse cluster filter');
+    // eslint-disable-next-line no-console
+    console.log(chalk.red('Unable to Parse Cluster Filter...'));
+    debug(error.message);
     process.exit(2);
   }
-  debug(`Loaded Cluster filter: ${clusterFilter}`);
+  // eslint-disable-next-line no-console
+  console.log(chalk.green(`Loaded Cluster filter: ${clusterFilter}`));
 }
 
 function parserService() {
@@ -216,7 +222,7 @@ function parserService() {
     return title.replace(/\w\S*/g, (word) => word.charAt(0).toUpperCase() + word.substr(1).toLowerCase());
   }
 
-  async function parseMaintenance(item, status) {
+  async function parseMaintenance(item, status, jiraService) {
     const output = {};
     debug('EVENT: MAINTENANCE');
     output.title = item.title;
@@ -280,7 +286,7 @@ function parserService() {
     await postMessage(process.env.MAINT_ROOM, html);
   }
 
-  async function parseIncident(item, status) {
+  async function parseIncident(item, status, jiraService) {
     const output = {};
     debug('EVENT: INCIDENT');
     output.title = item.title;
@@ -326,7 +332,7 @@ function parserService() {
     await postMessage(process.env.INC_ROOM, html);
   }
 
-  async function parseAnnouncement(item) {
+  async function parseAnnouncement(item, jiraService) {
     const output = {};
     debug('EVENT: ANNOUNCEMENT');
     output.title = item.title;
@@ -356,7 +362,7 @@ function parserService() {
     await postMessage(process.env.ANNOUNCE_ROOM, html);
   }
 
-  async function parseApi(item) {
+  async function parseApi(item, jiraService) {
     const output = {};
     debug('EVENT: API');
     output.title = item.title;

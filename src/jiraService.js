@@ -43,6 +43,7 @@ function jiraService() {
     const project = await jira.project.getProject(key);
     return project;
   }
+
   async function toMarkdown(content) {
     debug('process markdown');
 
