@@ -8,13 +8,22 @@ const toMd = new TurndownService();
 let jira = false;
 if (process.env.JIRA_SITE) {
   try {
-    jira = new JiraClient({
+    const config = {
       host: process.env.JIRA_SITE,
       strictSSL: true,
-      basic_auth: {
-        base64: process.env.JIRA_BASE64,
-      },
-    });
+      basic_auth: {},
+    };
+    if (typeof process.env.JIRA_SSL !== 'undefined') {
+      config.strictSSL = process.env.JIRA_SSL;
+    }
+    if (process.env.JIRA_BASE64) {
+      config.basic_auth.base64 = process.env.JIRA_BASE64;
+    }
+    if (process.env.JIRA_PASSWORD) {
+      config.basic_auth.username = process.env.JIRA_USERNAME;
+      config.basic_auth.password = process.env.JIRA_PASSWORD;
+    }
+    jira = new JiraClient(config);
   } catch (error) {
     debug('Error loading JIRA Connector');
     debug(error);
