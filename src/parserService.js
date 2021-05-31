@@ -1,7 +1,7 @@
 const debug = require('debug')('webex-rss:parserService');
 const Webex = require('webex');
 const chalk = require('chalk');
-// const jiraService = require('./jiraService');
+const retry = require('async-retry');
 
 // Load Webex SDK
 let webex;
@@ -198,14 +198,24 @@ function parserService() {
   }
 
   async function postMessage(roomId, html) {
-    webex.messages
-      .create({
-        html,
-        roomId,
-      })
-      .catch((error) => {
-        debug(error);
-      });
+    await retry(
+      async () => {
+        webex.messages
+          .create({
+            html,
+            roomId,
+          })
+          .then(() => {
+            debug('message sent');
+          })
+          .catch((error) => {
+            debug(error.message);
+          });
+      },
+      {
+        retries: 5,
+      },
+    );
   }
 
   async function getBot() {
@@ -219,7 +229,10 @@ function parserService() {
   }
 
   function toTitleCase(title) {
-    return title.replace(/\w\S*/g, (word) => word.charAt(0).toUpperCase() + word.substr(1).toLowerCase());
+    return title.replace(
+      /\w\S*/g,
+      (word) => word.charAt(0).toUpperCase() + word.substr(1).toLowerCase(),
+    );
   }
 
   async function parseMaintenance(item, status, jiraService) {
@@ -262,9 +275,7 @@ function parserService() {
       output.title
     }</a></strong><blockquote class="${
       output.blockquote
-    }"><strong>Status: </strong>${
-      toTitleCase(status)
-    }`;
+    }"><strong>Status: </strong>${toTitleCase(status)}`;
     if (output.clusters.length > 0) {
       const clusters = output.clusters.join(', ');
       if (clusters.includes(',')) {
@@ -311,9 +322,7 @@ function parserService() {
       output.title
     }</a></strong><blockquote class="${
       output.blockquote
-    }"><strong>Status: </strong>${
-      toTitleCase(status)
-    }`;
+    }"><strong>Status: </strong>${toTitleCase(status)}`;
     if (output.clusters.length > 0) {
       const clusters = output.clusters.join(', ');
       if (clusters.includes(',')) {
