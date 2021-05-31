@@ -135,7 +135,7 @@ async function init() {
   let apiEnabled = false;
   try {
     const apiRoom = await parserService.getRoom(process.env.API_ROOM);
-    debug(`API Room: ${apiRoom.title}`);
+    console.log(chalk.green(`API Room: ${apiRoom.title}`));
     apiEnabled = true;
   } catch (error) {
     console.log(chalk.yellow('WARN: Bot is not a member of the API Room!'));
