@@ -1,7 +1,7 @@
 const debug = require('debug')('webex-rss:parserService');
 const Webex = require('webex');
 const chalk = require('chalk');
-const retry = require('async-retry');
+const promiseRetry = require('promise-retry');
 
 // Load Webex SDK
 let webex;
@@ -198,24 +198,18 @@ function parserService() {
   }
 
   async function postMessage(roomId, html) {
-    await retry(
-      async () => {
-        webex.messages
-          .create({
-            html,
-            roomId,
-          })
-          .then(() => {
-            debug('message sent');
-          })
-          .catch((error) => {
-            debug(error.message);
-          });
-      },
-      {
-        retries: 5,
-      },
-    );
+    promiseRetry({ retries: 5 }, async (retry, number) => {
+      debug(`message send attempt ${number}`);
+      await webex.messages.create({ html, roomId })
+        .catch(retry);
+    })
+      .then(() => {
+        debug('message sent');
+      }, (err) => {
+        // eslint-disable-next-line no-console
+        console.log(chalk.red('Unable to send Message...'));
+        debug(err.message);
+      });
   }
 
   async function getBot() {
