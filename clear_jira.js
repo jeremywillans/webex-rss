@@ -1,5 +1,5 @@
 const debug = require('debug')('webex-rss:clearJira');
-const JiraClient = require('jira-connector');
+const JiraApi = require('jira-client');
 const dotenv = require('dotenv');
 
 // Load ENV if not present
@@ -8,17 +8,29 @@ if (!process.env.WEBEX_CLIENT_ID) {
   dotenv.config();
 }
 
-// Load JIRA Connector if configured
+function processEnv(env) {
+  let result = env;
+  if (result === 'true') result = true;
+  if (result === 'false') result = false;
+  if (result === 'null') result = null;
+  return result;
+}
+
 let jira = false;
 if (process.env.JIRA_SITE) {
   try {
-    jira = new JiraClient({
+    const config = {
+      protocol: process.env.JIRA_PROTOCOL || 'https',
       host: process.env.JIRA_SITE,
       strictSSL: true,
-      basic_auth: {
-        base64: process.env.JIRA_BASE64,
-      },
-    });
+      basic_auth: {},
+      username: process.env.JIRA_USERNAME,
+      password: process.env.JIRA_PASSWORD,
+    };
+    if (typeof process.env.JIRA_SSL !== 'undefined') {
+      config.strictSSL = processEnv(process.env.JIRA_SSL);
+    }
+    jira = new JiraApi(config);
   } catch (error) {
     debug('Error loading JIRA Connector');
     debug(error);
@@ -30,10 +42,10 @@ if (!jira) {
   process.exit(0);
 }
 
-jira.search.search({ method: 'POST', jql: '' }).then((response) => {
+jira.searchJira().then((response) => {
   debug(`JIRA Count: ${response.total}`);
   response.issues.forEach((item) => {
-    jira.issue.deleteIssue({ issueKey: item.key }).then(() => {
+    jira.deleteIssue(item.key).then(() => {
       debug(`Deleted JIRA: ${item.key}`);
     });
   });

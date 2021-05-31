@@ -1,5 +1,5 @@
 const debug = require('debug')('webex-rss:jiraService');
-const JiraClient = require('jira-connector');
+const JiraApi = require('jira-client');
 const TurndownService = require('turndown');
 
 // Load Turndown for HTML to Markdown
@@ -17,21 +17,17 @@ let jira = false;
 if (process.env.JIRA_SITE) {
   try {
     const config = {
+      protocol: process.env.JIRA_PROTOCOL || 'https',
       host: process.env.JIRA_SITE,
       strictSSL: true,
       basic_auth: {},
+      username: process.env.JIRA_USERNAME,
+      password: process.env.JIRA_PASSWORD,
     };
     if (typeof process.env.JIRA_SSL !== 'undefined') {
       config.strictSSL = processEnv(process.env.JIRA_SSL);
     }
-    if (process.env.JIRA_BASE64) {
-      config.basic_auth.base64 = process.env.JIRA_BASE64;
-    }
-    if (process.env.JIRA_PASSWORD) {
-      config.basic_auth.username = process.env.JIRA_USERNAME;
-      config.basic_auth.password = process.env.JIRA_PASSWORD;
-    }
-    jira = new JiraClient(config);
+    jira = new JiraApi(config);
   } catch (error) {
     debug('Error loading JIRA Connector');
     debug(error);
@@ -40,7 +36,7 @@ if (process.env.JIRA_SITE) {
 
 function jiraService() {
   async function getProject(key) {
-    const project = await jira.project.getProject(key);
+    const project = await jira.getProject(key);
     return project;
   }
 
@@ -64,7 +60,7 @@ function jiraService() {
     try {
       const jiraIdentifier = process.env.JIRA_IDENTIFIER_NAME;
       const jql = `${jiraIdentifier} ~ "\\"${identifier}\\""`;
-      const response = await jira.search.search({ method: 'POST', jql });
+      const response = await jira.searchJira(jql);
       switch (response.total) {
         case 0:
           debug('no existing issue');
@@ -100,6 +96,9 @@ function jiraService() {
       case 'announcement':
         prefix = '[ANN] ';
         break;
+      case 'api':
+        prefix = '[API] ';
+        break;
       default:
     }
 
@@ -124,7 +123,7 @@ function jiraService() {
         }`;
 
     try {
-      const response = await jira.issue.createIssue(JSON.parse(bodyData));
+      const response = await jira.addNewIssue(JSON.parse(bodyData));
       debug(`JIRA ${response.id} raised`);
       return response;
     } catch (error) {
@@ -137,14 +136,14 @@ function jiraService() {
     debug('commentJira');
 
     const markdown = await toMarkdown(content.description);
-    const bodyData = `
-        {
-          "issueKey": "${issue.key}",
-          "body": "${markdown}"
-        }`;
+    // const bodyData = `
+    //     {
+    //       "issueId": "${issue.key}",
+    //       "comment": "${markdown}"
+    //     }`;
 
     try {
-      await jira.issue.addComment(JSON.parse(bodyData));
+      await jira.addComment(issue.key, markdown);
       debug(`JIRA ${issue.key} updated`);
       return issue;
     } catch (error) {

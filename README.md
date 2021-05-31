@@ -20,8 +20,7 @@ It provides the following functions
     b. Add new or select existing field in JIRA for RSS Feed item unique identifier (used to match existing JIRA Tickets)
 
 3. Create Spaces for Output Messages in Webex App
-4. Obtain RoomId for each room (simply add astronaut@webex.com
-
+4. Obtain RoomId for each room (simply add astronaut@webex.bot to space)
 3. Build and Deploy Docker Container (or deploy to Cloud)
 
     ```
@@ -30,7 +29,7 @@ It provides the following functions
       -e _ENVIRONMENTAL_VARIABLE_ = _value_ \
       webex-rss
     ```
-    **Note** - JIRA Variables can be excluded if not using JIRA, and DEBUG variable will output log data to the console.
+    **Note** - JIRA is Optional
 
 ### Environmental Variables
 
@@ -47,19 +46,18 @@ These variables can be individually defined in Docker, or loaded as an `.env` fi
 | GLOBAL_AGENT_HTTP_PROXY | Optional | ` ` | HTTP Proxy Setting
 | GLOBAL_AGENT_NO_PROXY | Optional | ` ` | Comma Separated List of excluded domains (Supports wildcards)
 | JIRA_SITE | Optional | ` ` | FQDN of JIRA Instance
-| JIRA_PROTOCOL | Optional | ` ` | Protocol used to access JIRA Interface
+| JIRA_PROTOCOL | Optional | `https` | Protocol used to access JIRA Interface
 | JIRA_SSL | Optional | `true` | Enables Strict SSL of the JIRA Server  
-| JIRA_BASE64 | Optional | ` ` | Base64 Encoded Result of `username:api_token`
-| JIRA_USERNAME | Optional | ` ` | JIRA Username for Authentication (instead of Base64)
-| JIRA_PASSWORD | Optional | ` ` | JIRA Password for Authentication (instead of Base64)
+| JIRA_USERNAME | Optional | ` ` | JIRA Username for Authentication
+| JIRA_PASSWORD | Optional | ` ` | JIRA Password or API Token for Authentication
 | JIRA_PROJECT | Optional | ` ` | JIRA Project Code (eg. NOTIFY)
 | JIRA_ISSUE | Optional | ` ` | JIRA Issue Type (eg. Task)
-| JIRA_IDENTIFIER_FIELD | Optional | ` ` | JIRA Field Identifier to store RSS Post Unique ID
-| JIRA_IDENTIFIER_NAME | Optional | ` ` | JIRA Field Name to store RSS Post Unique ID
-| JIRA_API_LOG | Optional | `false` | Log JIRA Tickets for API Entries
+| JIRA_IDENTIFIER_FIELD | Optional | ` ` | JIRA Field API Identifier to store RSS Item Unique ID
+| JIRA_IDENTIFIER_NAME | Optional | ` ` | JIRA Field Name to store RSS Item Unique ID
+| JIRA_API_LOG | Optional | `false` | Log JIRA Tickets for Developer API Entries
 | DEBUG | Optional | ` ` | Output Debug Log Entries to console (set to `webex-rss*`)
 
-4. Verify Docker logs to ensure bot as started successfully.
+4. Verify Docker logs to ensure bot as started successfully, optionally debug can be enabled for more detail.
 
 ## Support
 
