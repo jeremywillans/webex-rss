@@ -6,7 +6,7 @@ const { bootstrap } = require('global-agent');
 const chalk = require('chalk');
 
 // Load ENV if not present
-if (!process.env.WEBEX_CLIENT_ID) {
+if (!process.env.TOKEN) {
   debug('Load from .env');
   dotenv.config();
 }

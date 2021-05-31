@@ -8,7 +8,7 @@ const chalk = require('chalk');
 debug('Loading DEV File');
 
 // Load ENV if not present
-if (!process.env.WEBEX_CLIENT_ID) {
+if (!process.env.TOKEN) {
   debug('Load from .env');
   dotenv.config();
 }
