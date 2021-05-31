@@ -111,8 +111,10 @@ async function init() {
     process.exit(2);
   }
   try {
-    const jiraProject = await jiraService.getProject(process.env.JIRA_PROJECT);
-    console.log(chalk.green(`JIRA Project: ${jiraProject.name}`));
+    if (process.env.JIRA_SITE) {
+      const jiraProject = await jiraService.getProject(process.env.JIRA_PROJECT);
+      console.log(chalk.green(`JIRA Project: ${jiraProject.name}`));
+    }
   } catch (error) {
     console.log(chalk.yellow('WARN: Unable to verify JIRA Project'));
     jiraService = false;
