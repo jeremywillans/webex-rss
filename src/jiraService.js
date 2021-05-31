@@ -5,6 +5,14 @@ const TurndownService = require('turndown');
 // Load Turndown for HTML to Markdown
 const toMd = new TurndownService();
 
+function processEnv(env) {
+  let result = env;
+  if (result === 'true') result = true;
+  if (result === 'false') result = false;
+  if (result === 'null') result = null;
+  return result;
+}
+
 let jira = false;
 if (process.env.JIRA_SITE) {
   try {
@@ -14,7 +22,7 @@ if (process.env.JIRA_SITE) {
       basic_auth: {},
     };
     if (typeof process.env.JIRA_SSL !== 'undefined') {
-      config.strictSSL = process.env.JIRA_SSL;
+      config.strictSSL = processEnv(process.env.JIRA_SSL);
     }
     if (process.env.JIRA_BASE64) {
       config.basic_auth.base64 = process.env.JIRA_BASE64;
