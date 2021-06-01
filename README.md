@@ -56,6 +56,7 @@ These variables can be individually defined in Docker, or loaded as an `.env` fi
 | JIRA_IDENTIFIER_NAME | Optional | ` ` | JIRA Field Name to store RSS Item Unique ID
 | JIRA_API_LOG | Optional | `false` | Log JIRA Tickets for Developer API Entries
 | DEBUG | Optional | ` ` | Output Debug Log Entries to console (set to `webex-rss*`)
+| NODE_ENV | Optional | `production` | RSS Cache data is skipped if NODE_ENV is set to Production (used for testing)
 
 4. Verify Docker logs to ensure bot as started successfully, optionally debug can be enabled for more detail.
 
