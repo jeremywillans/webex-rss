@@ -59,7 +59,7 @@ function jiraService() {
     // Search for Existing JIRA matching the Identifier
     try {
       const jiraIdentifier = process.env.JIRA_IDENTIFIER_NAME;
-      const jql = `${jiraIdentifier} ~ "\\"${identifier}\\""`;
+      const jql = `"${jiraIdentifier}" ~ "\\"${identifier}\\""`;
       const response = await jira.searchJira(jql);
       switch (response.total) {
         case 0:
