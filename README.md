@@ -52,6 +52,8 @@ These variables can be individually defined in Docker, or loaded as an `.env` fi
 | JIRA_PASSWORD | Optional | ` ` | JIRA Password or API Token for Authentication
 | JIRA_PROJECT | Optional | ` ` | JIRA Project Code (eg. NOTIFY)
 | JIRA_ISSUE | Optional | ` ` | JIRA Issue Type (eg. Task)
+| JIRA_EPIC_FIELD | Optional | ` ` | JIRA Parent EPIC Link Field Name (eg. customfield_12100)
+| JIRA_EPIC_ID | Optional | ` ` | JIRA Parent EPIC Link Identifier (eg. EPIC-1223)
 | JIRA_IDENTIFIER_FIELD | Optional | ` ` | JIRA Field API Identifier to store RSS Item Unique ID
 | JIRA_IDENTIFIER_NAME | Optional | ` ` | JIRA Field Name to store RSS Item Unique ID
 | JIRA_API_LOG | Optional | `false` | Log JIRA Tickets for Developer API Entries

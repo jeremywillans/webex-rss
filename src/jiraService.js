@@ -103,7 +103,7 @@ function jiraService() {
     }
 
     const markdown = await toMarkdown(content.description);
-    const bodyData = `
+    const bodyData = JSON.parse(`
         {
           "update": {},
           "fields": {
@@ -120,10 +120,15 @@ function jiraService() {
               "${content.type}"
             ]
           }
-        }`;
+        }`);
+
+    // Set EPIC Field, if defined
+    if (process.env.JIRA_EPIC_FIELD && process.env.JIRA_EPIC_ID) {
+      bodyData.fields[process.env.JIRA_EPIC_FIELD] = process.env.JIRA_EPIC_ID;
+    }
 
     try {
-      const response = await jira.addNewIssue(JSON.parse(bodyData));
+      const response = await jira.addNewIssue(bodyData);
       debug(`JIRA ${response.id} raised`);
       return response;
     } catch (error) {
