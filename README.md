@@ -60,6 +60,7 @@ These variables can be individually defined in Docker, or loaded as an `.env` fi
 | DEBUG | Optional | ` ` | Output Debug Log Entries to console (set to `webex-rss*`)
 | NODE_ENV | Optional | `production` | RSS Cache data is skipped if NODE_ENV is set to Production (used for testing)
 | NODE_EXTRA_CA_CERTS | Optional | ` ` | absolute path to additional CA file in pem format (eg. /certs/cacert.pem)
+
 4. Verify Docker logs to ensure bot as started successfully, optionally debug can be enabled for more detail.
 
 ## Support
