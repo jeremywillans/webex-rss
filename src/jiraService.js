@@ -1,6 +1,7 @@
 const debug = require('debug')('webex-rss:jiraService');
 const JiraApi = require('jira-client');
 const TurndownService = require('turndown');
+const fs = require('fs');
 
 // Load Turndown for HTML to Markdown
 const toMd = new TurndownService();
@@ -24,6 +25,9 @@ if (process.env.JIRA_SITE) {
       username: process.env.JIRA_USERNAME,
       password: process.env.JIRA_PASSWORD,
     };
+    if (typeof process.env.NODE_EXTRA_CA_CERTS !== 'undefined') {
+      config.ca = fs.readFileSync(process.env.NODE_EXTRA_CA_CERTS).toString("utf8");
+    }
     if (typeof process.env.JIRA_SSL !== 'undefined') {
       config.strictSSL = processEnv(process.env.JIRA_SSL);
     }
