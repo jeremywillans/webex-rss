@@ -18,6 +18,25 @@ try {
   process.exit(2);
 }
 
+function processEnv(env) {
+  let result = env;
+  if (!Number.isNaN(Number(result))) result = Number(result);
+  if (result === 'true') result = true;
+  if (result === 'false') result = false;
+  if (result === 'null') result = null;
+  return result;
+}
+
+// Load Retry Variables
+let retryCount = 5;
+if (process.env.RETRY_COUNT) {
+  retryCount = processEnv(process.env.RETRY_COUNT);
+}
+let retryInterval = 1000; // Default 1s
+if (process.env.RETRY_COUNT) {
+  retryInterval = processEnv(process.env.RETRY_COUNT) * 1000;
+}
+
 // Parse Cluster Filter ENV
 let clusterFilter = [];
 if (process.env.CLUSTER_FILTER) {
@@ -198,18 +217,22 @@ function parserService() {
   }
 
   async function postMessage(roomId, html) {
-    promiseRetry({ retries: 5 }, async (retry, number) => {
-      debug(`message send attempt ${number}`);
-      await webex.messages.create({ html, roomId })
-        .catch(retry);
-    })
-      .then(() => {
+    promiseRetry(
+      { retries: retryCount, minTimeout: retryInterval },
+      async (retry, number) => {
+        debug(`message send attempt ${number}`);
+        await webex.messages.create({ html, roomId }).catch(retry);
+      },
+    ).then(
+      () => {
         debug('message sent');
-      }, (err) => {
+      },
+      (err) => {
         // eslint-disable-next-line no-console
         console.log(chalk.red('Unable to send Message...'));
         debug(err.message);
-      });
+      },
+    );
   }
 
   async function getBot() {
