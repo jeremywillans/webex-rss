@@ -20,7 +20,7 @@ It provides the following functions
     b. Add new or select existing field in JIRA for RSS Feed item unique identifier (used to match existing JIRA Tickets)
 
 3. Create Spaces for Output Messages in Webex App
-4. Obtain RoomId for each room (simply add astronaut@webex.bot to space)
+4. Obtain RoomId for each room (simply add `astronaut@webex.bot` to space, or get using Developer APIs)
 3. Build and Deploy Docker Container (or deploy to Cloud)
 
     ```
@@ -43,8 +43,8 @@ These variables can be individually defined in Docker, or loaded as an `.env` fi
 | ANNOUNCE_ROOM | **Required** | ` ` | RoomId for Webex Announcement Space
 | API_ROOM | Optional | ` ` | RoomId for Webex Developer API Space
 | CLUSTER_FILTER | Optional | ` ` | Comma Separated List of Cluster Names to include.
-| GLOBAL_AGENT_HTTP_PROXY | Optional | ` ` | HTTP Proxy Setting
-| GLOBAL_AGENT_NO_PROXY | Optional | ` ` | Comma Separated List of excluded domains (Supports wildcards)
+| GLOBAL_AGENT_HTTP_PROXY | Optional | ` ` | Container HTTP Proxy Setting
+| GLOBAL_AGENT_NO_PROXY | Optional | ` ` | Comma Separated List of excluded proxy domains (Supports wildcards)
 | JIRA_SITE | Optional | ` ` | FQDN of JIRA Instance
 | JIRA_PROTOCOL | Optional | `https` | Protocol used to access JIRA Interface
 | JIRA_SSL | Optional | `true` | Enables Strict SSL of the JIRA Server  
@@ -54,8 +54,8 @@ These variables can be individually defined in Docker, or loaded as an `.env` fi
 | JIRA_ISSUE | Optional | ` ` | JIRA Issue Type (eg. Task)
 | JIRA_CUSTOM_FIELD | Optional | ` ` | JIRA Custom Field Name, such as adding an EPIC Link (eg. customfield_12100)
 | JIRA_CUSTOM_VALUE | Optional | ` ` | JIRA Custom Field Value (eg. EPIC-1223)
-| JIRA_IDENTIFIER_FIELD | Optional | ` ` | JIRA Field API Identifier to store RSS Item Unique ID
-| JIRA_IDENTIFIER_NAME | Optional | ` ` | JIRA Field Name to store RSS Item Unique ID
+| JIRA_IDENTIFIER_FIELD | Optional | ` ` | JIRA Field API Identifier to store RSS Item Unique ID (eg. customfield_12101)
+| JIRA_IDENTIFIER_NAME | Optional | ` ` | JIRA Field Name to store RSS Item Unique ID (eg. Identifier)
 | JIRA_API_LOG | Optional | `false` | Log JIRA Tickets for Developer API Entries
 | DEBUG | Optional | ` ` | Output Debug Log Entries to console (set to `webex-rss*`)
 | NODE_EXTRA_CA_CERTS | Optional | ` ` | Absolute path to an additional CA file in PEM Format (eg. `/certs/cacert.pem`)
