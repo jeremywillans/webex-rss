@@ -1,6 +1,8 @@
 const debug = require('debug')('webex-rss:jiraService');
 const JiraApi = require('jira-client');
 const TurndownService = require('turndown');
+const fs = require('fs');
+const chalk = require('chalk');
 
 // Load Turndown for HTML to Markdown
 const toMd = new TurndownService();
@@ -24,6 +26,17 @@ if (process.env.JIRA_SITE) {
       username: process.env.JIRA_USERNAME,
       password: process.env.JIRA_PASSWORD,
     };
+    try {
+      if (typeof process.env.NODE_EXTRA_CA_CERTS !== 'undefined') {
+        config.ca = fs.readFileSync(process.env.NODE_EXTRA_CA_CERTS).toString('utf8');
+        // eslint-disable-next-line no-console
+        console.log(chalk.green(`Loaded CA Cert File in JIRA: ${process.env.NODE_EXTRA_CA_CERTS}`));
+      }
+    } catch (error) {
+      // eslint-disable-next-line no-console
+      console.log(chalk.red(`Unable to load Custom CA File in JIRA: ${process.env.NODE_EXTRA_CA_CERTS}`));
+      debug(error.message);
+    }
     if (typeof process.env.JIRA_SSL !== 'undefined') {
       config.strictSSL = processEnv(process.env.JIRA_SSL);
     }
@@ -122,9 +135,9 @@ function jiraService() {
           }
         }`);
 
-    // Set EPIC Field, if defined
-    if (process.env.JIRA_EPIC_FIELD && process.env.JIRA_EPIC_ID) {
-      bodyData.fields[process.env.JIRA_EPIC_FIELD] = process.env.JIRA_EPIC_ID;
+    // Set Custom JIRA Field, if defined
+    if (process.env.JIRA_CUSTOM_FIELD && process.env.JIRA_CUSTOM_VALUE) {
+      bodyData.fields[process.env.JIRA_CUSTOM_FIELD] = process.env.JIRA_CUSTOM_VALUE;
     }
 
     try {

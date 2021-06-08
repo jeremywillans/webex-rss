@@ -52,13 +52,13 @@ These variables can be individually defined in Docker, or loaded as an `.env` fi
 | JIRA_PASSWORD | Optional | ` ` | JIRA Password or API Token for Authentication
 | JIRA_PROJECT | Optional | ` ` | JIRA Project Code (eg. NOTIFY)
 | JIRA_ISSUE | Optional | ` ` | JIRA Issue Type (eg. Task)
-| JIRA_EPIC_FIELD | Optional | ` ` | JIRA Parent EPIC Link Field Name (eg. customfield_12100)
-| JIRA_EPIC_ID | Optional | ` ` | JIRA Parent EPIC Link Identifier (eg. EPIC-1223)
+| JIRA_CUSTOM_FIELD | Optional | ` ` | JIRA Custom Field Name, such as adding an EPIC Link (eg. customfield_12100)
+| JIRA_CUSTOM_VALUE | Optional | ` ` | JIRA Custom Field Value (eg. EPIC-1223)
 | JIRA_IDENTIFIER_FIELD | Optional | ` ` | JIRA Field API Identifier to store RSS Item Unique ID
 | JIRA_IDENTIFIER_NAME | Optional | ` ` | JIRA Field Name to store RSS Item Unique ID
 | JIRA_API_LOG | Optional | `false` | Log JIRA Tickets for Developer API Entries
 | DEBUG | Optional | ` ` | Output Debug Log Entries to console (set to `webex-rss*`)
-| NODE_ENV | Optional | `production` | RSS Cache data is skipped if NODE_ENV is set to Production (used for testing)
+| NODE_EXTRA_CA_CERTS | Optional | ` ` | Absolute path to an additional CA file in PEM Format (eg. `/certs/cacert.pem`)
 
 4. Verify Docker logs to ensure bot as started successfully, optionally debug can be enabled for more detail.
 

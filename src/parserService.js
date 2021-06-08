@@ -49,7 +49,7 @@ if (process.env.CLUSTER_FILTER) {
     process.exit(2);
   }
   // eslint-disable-next-line no-console
-  console.log(chalk.green(`Loaded Cluster filter: ${clusterFilter}`));
+  console.log(chalk.green(`Loaded Cluster Filter: ${clusterFilter}`));
 }
 
 function parserService() {
