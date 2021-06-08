@@ -30,14 +30,8 @@ const apiFeed = 'https://developer.webex.com/api/content/changelog/feed';
 // Define Interval (default 2mins)
 const interval = process.env.RSS_INTERVAL * 1000 || 120000;
 
-// Disable Preload in Production
-let config;
-if (process.env.NODE_ENV === 'production') {
-  config = JSON.parse('{ "skipFirstLoad": true }');
-}
-
 // Load Feed Emitter
-const feeder = new RssFeedEmitter(config);
+const feeder = new RssFeedEmitter();
 
 // Process Incident Feed
 feeder.on('incident', (item) => {
@@ -70,12 +64,10 @@ feeder.on('incident', (item) => {
 // Process Announcement Feed
 feeder.on('announcement', (item) => {
   // Discard Older Items from Announcement Feed
-  if (process.env.NODE_ENV !== 'production') {
-    const d = new Date();
-    d.setMonth(d.getMonth() - 1);
-    if (item.pubdate < d) {
-      return;
-    }
+  const d = new Date();
+  d.setMonth(d.getMonth() - 1);
+  if (item.pubdate < d) {
+    return;
   }
   debug('new announce item');
   parserService.parseAnnouncement(item, jiraService);
@@ -84,12 +76,10 @@ feeder.on('announcement', (item) => {
 // Process API Feed
 feeder.on('api', (item) => {
   // Discard Older Items from Announcement Feed
-  if (process.env.NODE_ENV !== 'production') {
-    const d = new Date();
-    d.setMonth(d.getMonth() - 1);
-    if (item.pubdate < d) {
-      return;
-    }
+  const d = new Date();
+  d.setMonth(d.getMonth() - 1);
+  if (item.pubdate < d) {
+    return;
   }
   debug('new api item');
   parserService.parseApi(item, jiraService);
