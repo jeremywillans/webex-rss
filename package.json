@@ -21,10 +21,12 @@
     "chalk": "^4.1.1",
     "debug": "^4.3.1",
     "dotenv": "^10.0.0",
-    "feed-watcher": "^0.2.1",
+    "events": "^3.3.0",
+    "feedparser": "^2.2.10",
     "global-agent": "^2.2.0",
     "jira-client": "^6.21.1",
     "promise-retry": "^2.0.1",
+    "request": "^2.88.2",
     "rss-feed-emitter": "^3.2.2",
     "turndown": "^7.0.0",
     "webex": "^1.123.0"
