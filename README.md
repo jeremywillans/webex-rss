@@ -14,9 +14,9 @@ It provides the following functions
 2. Prepare JIRA Requirements, (if using JIRA)
 
     a. Prepare Credentials
-    ```
-    > echo -n 'email:api_token' | base64
-    ```
+      - Username
+      - Password or API Token (token is required for Cloud instances)
+
     b. Add new or select existing field in JIRA for RSS Feed item unique identifier (used to match existing JIRA Tickets)
 
 3. Create Spaces for Output Messages in Webex App
