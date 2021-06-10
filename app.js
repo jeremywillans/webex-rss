@@ -3,7 +3,7 @@ const debug = require('debug')('webex-rss:app');
 const dotenv = require('dotenv');
 const { bootstrap } = require('global-agent');
 const chalk = require('chalk');
-const Watcher = require('./src/feedWatcher');
+const Watcher = require('./lib/feedWatcher');
 
 // Load ENV if not present
 if (!process.env.TOKEN) {
