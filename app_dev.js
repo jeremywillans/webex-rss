@@ -19,6 +19,15 @@ if (process.env.GLOBAL_AGENT_HTTP_PROXY) {
   bootstrap();
 }
 
+function processEnv(env) {
+  let result = env;
+  if (!Number.isNaN(Number(result))) result = Number(result);
+  if (result === 'true') result = true;
+  if (result === 'false') result = false;
+  if (result === 'null') result = null;
+  return result;
+}
+
 let jiraService = require('./src/jiraService');
 const parserService = require('./src/parserService');
 
@@ -27,8 +36,8 @@ const incidentFeed = 'https://status.webex.com/history.rss';
 const announcementFeed = 'https://status.webex.com/maintenance.rss';
 const apiFeed = 'https://developer.webex.com/api/content/changelog/feed';
 
-// Define Interval (default 2mins)
-const interval = process.env.RSS_INTERVAL * 1000 || 120000;
+// Define Interval (default 5mins)
+const interval = processEnv(process.env.RSS_INTERVAL) * 60000 || 300000;
 
 // Load Feed Emitter
 const feeder = new RssFeedEmitter();
