@@ -1,9 +1,9 @@
 /* eslint-disable no-console */
 const debug = require('debug')('webex-rss:app');
-const Watcher = require('feed-watcher');
 const dotenv = require('dotenv');
 const { bootstrap } = require('global-agent');
 const chalk = require('chalk');
+const Watcher = require('./lib/feedWatcher');
 
 // Load ENV if not present
 if (!process.env.TOKEN) {
@@ -17,6 +17,15 @@ if (process.env.GLOBAL_AGENT_HTTP_PROXY) {
   bootstrap();
 }
 
+function processEnv(env) {
+  let result = env;
+  if (!Number.isNaN(Number(result))) result = Number(result);
+  if (result === 'true') result = true;
+  if (result === 'false') result = false;
+  if (result === 'null') result = null;
+  return result;
+}
+
 let jiraService = require('./src/jiraService');
 const parserService = require('./src/parserService');
 
@@ -26,7 +35,7 @@ const announcementFeed = 'https://status.webex.com/maintenance.rss';
 const apiFeed = 'https://developer.webex.com/api/content/changelog/feed';
 
 // Load RSS Watcher Instances
-const interval = process.env.RSS_INTERVAL || 2;
+const interval = processEnv(process.env.RSS_INTERVAL) * 60 || 300;
 const incidentWatcher = new Watcher(incidentFeed, interval);
 const announcementWatcher = new Watcher(announcementFeed, interval);
 const apiWatcher = new Watcher(apiFeed, interval);
