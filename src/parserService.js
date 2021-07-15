@@ -201,16 +201,20 @@ function parserService() {
         break;
       case 'monitoring':
       case 'in progress':
+      case 'Warning':
         blockquote = 'warning';
         break;
       case 'resolved':
       case 'completed':
+      case 'New':
+      case 'None':
         blockquote = 'success';
         break;
       case 'scheduled':
         blockquote = 'info';
         break;
       default:
+        // Includes 'Breaking Change'
         blockquote = 'danger';
     }
     return blockquote;
@@ -395,9 +399,13 @@ function parserService() {
     output.type = 'api';
     output.description = item.description;
     output.guid = item.guid.replace(/\r\n/g, '');
+    output.type = item['rss:type']['#'] || 'New';
+    output.blockquote = await formatBlockquote(output.type);
     output.link = item.link;
 
-    let html = `<strong><a href='${output.link}'>${output.title}</a></strong><blockquote class="info">`;
+    let html = `<strong><a href='${output.link}'>${output.title}</a></strong><blockquote class="${
+      output.blockquote
+    }"><strong>Category: </strong>${toTitleCase(output.type)}`;
     if (jiraService && process.env.JIRA_API_LOG) {
       const response = await jiraService.processJira(output);
       const jiraType = toTitleCase(process.env.JIRA_ISSUE);
