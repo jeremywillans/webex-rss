@@ -20,7 +20,7 @@ It provides the following functions
     b. Add new or select existing field in JIRA for RSS Feed item unique identifier (used to match existing JIRA Tickets)
 
 3. Create Spaces for Output Messages in Webex App
-4. Obtain RoomId for each room (simply add `astronaut@webex.bot` to space, or get using Developer APIs)
+4. Obtain RoomId for each room (simply add `astronaut@webex.bot` to space or in 1:1 @mention the space name, or get using Developer APIs)
 3. Build and Deploy Docker Container (or deploy to Cloud)
 
     ```
