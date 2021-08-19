@@ -3,7 +3,7 @@
 Webex RSS is a parser bot designed to enrich the data provided from the Webex RSS Feeds.
 
 It provides the following functions
-- Separates the feed content into three Webex Spaces (Incidents, Maintenance and Announcements)
+- Separates the feed content into three or four Webex Spaces (Incidents, Maintenance, Announcements and optionally Developer API)
 - Define a filter to limit based on a specific/set of clusters to monitor.
 - Raise individual Tasks in JIRA for IT Service Management support processing. 
 - Further updates to each JIRA Task will be added as a comment
