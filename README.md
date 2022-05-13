@@ -44,6 +44,8 @@ These variables can be individually defined in Docker, or loaded as an `.env` fi
 | API_ROOM | Optional | ` ` | RoomId for Webex Developer API Space
 | RSS_INTERVAL | Optional | `5` | Interval for RSS Checks (Minutes)
 | CLUSTER_FILTER | Optional | ` ` | Comma Separated List of Cluster Names to include.
+| SITE_FILTER | Optional | ` ` | Semicolon Separated List of Site Name and Cluster (Comma Separated) for Schedule Parsing. Example: `site1,AP;site2,IC;test-site,B`
+| DATE_FORMAT | Optional | `YYYY-MM-DD` | Date Format used if implementing Site Filter option (above)
 | GLOBAL_AGENT_HTTP_PROXY | Optional | ` ` | Container HTTP Proxy Setting
 | GLOBAL_AGENT_NO_PROXY | Optional | ` ` | Comma Separated List of excluded proxy domains (Supports wildcards)
 | JIRA_SITE | Optional | ` ` | FQDN of JIRA Instance

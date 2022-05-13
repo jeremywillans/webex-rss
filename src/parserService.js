@@ -2,7 +2,9 @@ const debug = require('debug')('webex-rss:parserService');
 const Webex = require('webex');
 const chalk = require('chalk');
 const promiseRetry = require('promise-retry');
+const dayjs = require('dayjs');
 
+const dateFormat = process.env.DATE_FORMAT || 'YYYY-MM-DD';
 // Load Webex SDK
 let webex;
 try {
@@ -50,6 +52,36 @@ if (process.env.CLUSTER_FILTER) {
   }
   // eslint-disable-next-line no-console
   console.log(chalk.green(`Loaded Cluster Filter: ${clusterFilter}`));
+}
+
+// Parse Site Filter ENV
+let siteFilter = false;
+if (process.env.SITE_FILTER) {
+  try {
+    siteFilter = [];
+    const siteList = process.env.SITE_FILTER.split(';');
+    siteList.forEach((entry) => {
+      const item = entry.split(',');
+      let sites = item[0].trim().toLowerCase();
+      if (sites.includes('.webex.com')) {
+        sites = sites.replace(/\.webex\.com/, '');
+      }
+      const cluster = item[1].trim().toUpperCase();
+      const index = siteFilter.findIndex((i) => i.cluster === cluster);
+      if (index === -1) {
+        siteFilter.push({ cluster, sites });
+      } else {
+        siteFilter[index].sites = `${siteFilter[index].sites}, ${sites}`;
+      }
+    });
+  } catch (error) {
+    // eslint-disable-next-line no-console
+    console.log(chalk.red('Unable to Parse Site Filter...'));
+    debug(error.message);
+    process.exit(2);
+  }
+  // eslint-disable-next-line no-console
+  console.log(chalk.green(`Loaded Site Filter: ${JSON.stringify(siteFilter)}`));
 }
 
 function parserService() {
@@ -190,6 +222,78 @@ function parserService() {
     }
     formatted = formatted.replace(/\r?\n|\r/g, '<br />');
     return formatted;
+  }
+
+  async function parseSchedule(description) {
+    const clusterArray = [];
+    const clusterText = 'Cluster and Deployment Date';
+    const dashes = '----------------------------------------';
+    const endText = 'Please refer to the maintenance calendar';
+    const descArray = description.split('\n');
+    // Filter items missing deployment text
+    if (descArray.filter((item) => item.includes(clusterText)).length === 0) {
+      return description;
+    }
+    let startIndex = 0;
+    let endIndex = descArray.length - 1;
+    const dashCount = descArray.filter((item) => item.includes(dashes));
+    switch (dashCount.length) {
+      case 2:
+        startIndex = descArray.findIndex((i) => i.includes(dashes)) + 1;
+        endIndex = descArray.slice(startIndex)
+          .findIndex((i) => i.includes(dashes)) + startIndex;
+        break;
+      default:
+        startIndex = descArray.findIndex((i) => i.includes(clusterText)) + 1;
+        endIndex = descArray.findIndex((i) => i.includes(endText));
+        if (endIndex === -1) {
+          return description;
+        }
+        if (descArray[endIndex - 1] === '\r') {
+          endIndex -= 1;
+        }
+    }
+    const scheduleArray = descArray.slice(startIndex, endIndex);
+    scheduleArray.forEach((i) => {
+      if (i.includes('=')) {
+        // Validate not URL
+        if (i.includes('href=')) {
+          return;
+        }
+        const item = i.split('=');
+        if (item.length !== 2) {
+          return;
+        }
+        const clusters = item[0].split(',');
+        let date;
+        try {
+          const newDate = dayjs(item[1]);
+          date = newDate.format(dateFormat);
+        } catch {
+          // eslint-disable-next-line prefer-destructuring
+          date = item[1];
+        }
+        clusters.forEach((ref) => {
+          const cluster = ref.trim();
+          clusterArray.push({ cluster, date });
+        });
+      }
+    });
+    if (clusterArray.length > 0 && siteFilter) {
+      descArray.splice(startIndex, endIndex - startIndex);
+      let i = startIndex;
+      siteFilter.forEach((item) => {
+        const index = clusterArray.findIndex((j) => j.cluster === item.cluster);
+        if (index !== -1) {
+          descArray.splice(i, 0, `${item.sites} = ${clusterArray[index].date} (${item.cluster})`);
+        } else {
+          descArray.splice(i, 0, `${item.sites} = Not Found (${item.cluster})`);
+        }
+        i += 1;
+      });
+      return descArray.join('\n');
+    }
+    return description;
   }
 
   async function formatBlockquote(status) {
@@ -368,7 +472,8 @@ function parserService() {
     output.title = item.title;
     output.type = 'announcement';
     output.clusters = await parseCluster(item.title);
-    output.description = await formatDescription(item.description, 22);
+    output.description = await parseSchedule(item.description);
+    output.description = await formatDescription(output.description, 22);
     output.guid = item.guid.replace(/\r\n/g, '');
     output.link = item.link;
 
