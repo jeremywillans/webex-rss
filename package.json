@@ -13,22 +13,30 @@
   "author": "Jeremy Willans",
   "license": "MIT",
   "devDependencies": {
-    "eslint": "^7.28.0",
-    "eslint-config-airbnb-base": "^14.2.1",
-    "eslint-plugin-import": "^2.23.4"
+    "eslint": "^8.33.0",
+    "eslint-config-airbnb-base": "^15.0.0",
+    "eslint-plugin-import": "^2.27.5"
   },
   "dependencies": {
     "chalk": "^4.1.1",
-    "debug": "^4.3.1",
-    "dotenv": "^10.0.0",
+    "debug": "^4.3.4",
+    "dotenv": "^16.0.3",
     "events": "^3.3.0",
     "feedparser": "^2.2.10",
-    "global-agent": "^2.2.0",
+    "global-agent": "^3.0.0",
     "jira-client": "^6.21.1",
     "promise-retry": "^2.0.1",
     "request": "^2.88.2",
-    "rss-feed-emitter": "^3.2.2",
-    "turndown": "^7.0.0",
-    "webex": "^1.123.0"
+    "rss-feed-emitter": "^3.2.3",
+    "turndown": "^7.1.1",
+    "webex": "2.29.3"
+  },
+  "overrides": {
+    "decode-uri-component": "0.2.2",
+    "jsonwebtoken": "9.0.0",
+    "ua-parser": "0.7.33",
+    "@xmldom/xmldom": "0.7.8",
+    "yargs": "17.6.2",
+    "json5": "1.0.2"
   }
 }
