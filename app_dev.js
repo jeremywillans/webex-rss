@@ -28,6 +28,10 @@ function processEnv(env) {
   return result;
 }
 
+// Initialize Device Room Status
+let deviceEnabled = false;
+const announceDevice = processEnv(process.env.ANNOUNCE_DEVICE) || false;
+
 let jiraService = require('./src/jiraService');
 const parserService = require('./src/parserService');
 
@@ -79,6 +83,14 @@ feeder.on('announcement', (item) => {
     return;
   }
   debug('new announce item');
+  if (deviceEnabled && item.title.match(/^RoomOS.*/)) {
+    debug('matches device title string');
+    parserService.parseDevice(item, jiraService);
+    if (!announceDevice) {
+      debug('skip sending device to ann space');
+      return;
+    }
+  }
   parserService.parseAnnouncement(item, jiraService);
 });
 
@@ -139,6 +151,13 @@ async function init() {
   } catch (error) {
     console.log(chalk.red('ERROR: Bot is not a member of the Announcement Room!'));
     process.exit(2);
+  }
+  try {
+    const deviceRoom = await parserService.getRoom(process.env.DEVICE_ROOM);
+    console.log(chalk.green(`Device Room: ${deviceRoom.title}`));
+    deviceEnabled = true;
+  } catch (error) {
+    console.log(chalk.yellow('WARN: Bot is not a member of the Device Room!'));
   }
   let apiEnabled = false;
   try {

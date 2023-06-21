@@ -430,6 +430,27 @@ function parserService() {
     await postMessage(process.env.ANNOUNCE_ROOM, html);
   }
 
+  async function parseDevice(item, jiraService) {
+    const output = {};
+    debug('EVENT: DEVICE');
+    output.title = item.title;
+    output.type = 'device';
+    output.description = await formatDescription(item.description, 22);
+    output.guid = item.guid.replace(/\r\n/g, '');
+    output.link = item.link;
+
+    let html = `<strong>${output.title}</strong><blockquote class="info">`;
+    html += `<strong>Maintenance Calendar: </strong>${output.link}`;
+    if (jiraService) {
+      const response = await jiraService.processJira(output);
+      const jiraType = toTitleCase(process.env.JIRA_ISSUE);
+      html += `<br><strong>JIRA ${jiraType}: </strong><a href=${response.url}>${response.key}</a>`;
+    }
+    html += `<br><br>${output.description}`;
+
+    await postMessage(process.env.DEVICE_ROOM, html);
+  }
+
   async function parseApi(item, jiraService) {
     const output = {};
     debug('EVENT: API');
@@ -464,6 +485,7 @@ function parserService() {
     parseMaintenance,
     parseIncident,
     parseAnnouncement,
+    parseDevice,
     parseApi,
   };
 }
