@@ -192,6 +192,7 @@ async function init() {
     console.log(chalk.yellow('WARN: Bot is not a member of the API Room!'));
   }
   incidentWatcher.start();
+  maintenanceWatcher.start();
   announcementWatcher.start();
   if (apiEnabled) {
     apiWatcher.start();
