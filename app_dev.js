@@ -36,8 +36,9 @@ let jiraService = require('./src/jiraService');
 const parserService = require('./src/parserService');
 
 // Define RSS Feeds
-const incidentFeed = 'https://status.webex.com/history.rss';
-const announcementFeed = 'https://status.webex.com/maintenance.rss';
+const incidentFeed = 'https://status.webex.com/incidents.rss';
+const maintenanceFeed = 'https://status.webex.com/maintenances.rss';
+const announcementFeed = 'https://status.webex.com/updates-upgrades.rss';
 const apiFeed = 'https://developer.webex.com/api/content/changelog/feed';
 
 // Define Interval (default 5mins)
@@ -56,16 +57,33 @@ feeder.on('incident', (item) => {
     const itemType = item.description.substring(typeIndex + 9, typeEnd);
     debug(`detected as ${itemType}`);
     switch (itemType) {
-      case 'scheduled':
-      case 'in progress':
-      case 'completed':
-        parserService.parseMaintenance(item, itemType, jiraService);
-        break;
       case 'resolved':
       case 'monitoring':
       case 'identified':
       case 'investigating':
         parserService.parseIncident(item, itemType, jiraService);
+        break;
+      default:
+        debug('EVENT: UNKNOWN');
+        debug(item);
+    }
+  }
+});
+
+// Process Maintenance Feed
+feeder.on('maintenance', (item) => {
+  // Identify Item Type
+  debug('new maintenance item');
+  const typeIndex = item.description.indexOf('<strong >');
+  if (typeIndex !== -1) {
+    const typeEnd = item.description.indexOf('</strong >', typeIndex);
+    const itemType = item.description.substring(typeIndex + 9, typeEnd);
+    debug(`detected as ${itemType}`);
+    switch (itemType) {
+      case 'scheduled':
+      case 'in progress':
+      case 'completed':
+        parserService.parseMaintenance(item, itemType, jiraService);
         break;
       default:
         debug('EVENT: UNKNOWN');
@@ -171,6 +189,11 @@ async function init() {
     url: incidentFeed,
     refresh: interval,
     eventName: 'incident',
+  });
+  feeder.add({
+    url: maintenanceFeed,
+    refresh: interval,
+    eventName: 'maintenance',
   });
   feeder.add({
     url: announcementFeed,

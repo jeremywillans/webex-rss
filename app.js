@@ -34,13 +34,15 @@ let jiraService = require('./src/jiraService');
 const parserService = require('./src/parserService');
 
 // Define RSS Feeds
-const incidentFeed = 'https://status.webex.com/history.rss';
-const announcementFeed = 'https://status.webex.com/maintenance.rss';
+const incidentFeed = 'https://status.webex.com/incidents.rss';
+const maintenanceFeed = 'https://status.webex.com/maintenances.rss';
+const announcementFeed = 'https://status.webex.com/updates-upgrades.rss';
 const apiFeed = 'https://developer.webex.com/api/content/changelog/feed';
 
 // Load RSS Watcher Instances
 const interval = processEnv(process.env.RSS_INTERVAL) * 60 || 300;
 const incidentWatcher = new Watcher(incidentFeed, interval);
+const maintenanceWatcher = new Watcher(maintenanceFeed, interval);
 const announcementWatcher = new Watcher(announcementFeed, interval);
 const apiWatcher = new Watcher(apiFeed, interval);
 
@@ -55,16 +57,35 @@ incidentWatcher.on('new entries', (entries) => {
       const itemType = item.description.substring(typeIndex + 9, typeEnd);
       debug(`detected as ${itemType}`);
       switch (itemType) {
-        case 'scheduled':
-        case 'in progress':
-        case 'completed':
-          parserService.parseMaintenance(item, itemType, jiraService);
-          break;
         case 'resolved':
         case 'monitoring':
         case 'identified':
         case 'investigating':
           parserService.parseIncident(item, itemType, jiraService);
+          break;
+        default:
+          debug('EVENT: UNKNOWN');
+          debug(item);
+      }
+    }
+  });
+});
+
+// Process Incident Feed
+maintenanceWatcher.on('new entries', (entries) => {
+  entries.forEach((item) => {
+    // Identify Item Type
+    debug('new maintenance item');
+    const typeIndex = item.description.indexOf('<strong >');
+    if (typeIndex !== -1) {
+      const typeEnd = item.description.indexOf('</strong >', typeIndex);
+      const itemType = item.description.substring(typeIndex + 9, typeEnd);
+      debug(`detected as ${itemType}`);
+      switch (itemType) {
+        case 'scheduled':
+        case 'in progress':
+        case 'completed':
+          parserService.parseMaintenance(item, itemType, jiraService);
           break;
         default:
           debug('EVENT: UNKNOWN');
