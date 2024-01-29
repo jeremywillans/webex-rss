@@ -53,7 +53,7 @@ if (process.env.CLUSTER_FILTER) {
 }
 
 function parserService() {
-  async function parseCluster(content) {
+  function parseCluster(content) {
     const clusters = [];
     // Webex Teams
     // if (content.match(/\bWebex Teams[,\s]/)) {
@@ -177,7 +177,7 @@ function parserService() {
     return clusters;
   }
 
-  async function parseLocation(description) {
+  function parseLocation(description) {
     let locations = [];
     const startLoc = description.indexOf('Locations:</strong>');
     const endLoc = description.indexOf(' </font><br /><br />', startLoc);
@@ -191,7 +191,7 @@ function parserService() {
     return locations;
   }
 
-  async function formatDescription(description, status) {
+  function formatDescription(description, status) {
     const endDesc = description.indexOf('</small>');
     const statusLoc = description.indexOf(status);
     let formatted = description;
@@ -209,7 +209,7 @@ function parserService() {
     return formatted;
   }
 
-  async function formatBlockquote(status) {
+  function formatBlockquote(status) {
     let blockquote;
     switch (status) {
       case 'investigating':
@@ -285,8 +285,8 @@ function parserService() {
     debug('EVENT: MAINTENANCE');
     output.title = formatTitle(item.title);
     output.type = 'maintenance';
-    output.clusters = await parseCluster(item.title);
-    output.locations = await parseLocation(item.description);
+    output.clusters = parseCluster(item.title);
+    output.locations = parseLocation(item.description);
 
     if (output.clusters.length > 0) {
       if (
@@ -316,8 +316,8 @@ function parserService() {
       item.description = newDesc;
     }
 
-    output.description = await formatDescription(item.description, status);
-    output.blockquote = await formatBlockquote(status);
+    output.description = formatDescription(item.description, status);
+    output.blockquote = formatBlockquote(status);
     output.guid = item.guid;
 
     let html = `<strong><a href=${output.guid}>${
@@ -359,10 +359,10 @@ function parserService() {
     debug('EVENT: INCIDENT');
     output.title = formatTitle(item.title);
     output.type = 'incident';
-    output.clusters = await parseCluster(item.title);
-    output.locations = await parseLocation(item.description);
-    output.description = await formatDescription(item.description, status);
-    output.blockquote = await formatBlockquote(status);
+    output.clusters = parseCluster(item.title);
+    output.locations = parseLocation(item.description);
+    output.description = formatDescription(item.description, status);
+    output.blockquote = formatBlockquote(status);
     output.guid = item.guid;
 
     if (output.clusters.length > 0) {
@@ -412,8 +412,8 @@ function parserService() {
     debug('EVENT: ANNOUNCEMENT');
     output.title = item.title;
     output.type = 'announcement';
-    output.clusters = await parseCluster(item.title);
-    output.description = await formatDescription(item.description, 22);
+    output.clusters = parseCluster(item.title);
+    output.description = formatDescription(item.description, 22);
     output.guid = item.guid.replace(/\r\n/g, '');
     output.link = item.link;
 
@@ -442,7 +442,7 @@ function parserService() {
     debug('EVENT: DEVICE');
     output.title = item.title;
     output.type = 'device';
-    output.description = await formatDescription(item.description, 22);
+    output.description = formatDescription(item.description, 22);
     output.guid = item.guid.replace(/\r\n/g, '');
     output.link = item.link;
 
@@ -466,7 +466,7 @@ function parserService() {
     output.description = item.description;
     output.guid = item.guid.replace(/\r\n/g, '');
     output.type = item['rss:type']['#'] || 'New';
-    output.blockquote = await formatBlockquote(output.type);
+    output.blockquote = formatBlockquote(output.type);
     output.link = item.link;
 
     let html = `<strong><a href='${output.link}'>${output.title}</a></strong><blockquote class="${
