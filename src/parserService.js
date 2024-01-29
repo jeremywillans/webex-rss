@@ -266,6 +266,13 @@ function parserService() {
     return incRoom;
   }
 
+  function formatTitle(title) {
+    let formatted = title;
+    formatted = formatted.replace(/'/g, '"');
+    formatted = formatted.replace('com/', 'com');
+    return formatted;
+  }
+
   function toTitleCase(title) {
     return title.replace(
       /\w\S*/g,
@@ -276,7 +283,7 @@ function parserService() {
   async function parseMaintenance(item, status, jiraService) {
     const output = {};
     debug('EVENT: MAINTENANCE');
-    output.title = item.title;
+    output.title = formatTitle(item.title);
     output.type = 'maintenance';
     output.clusters = await parseCluster(item.title);
     output.locations = await parseLocation(item.description);
@@ -350,7 +357,7 @@ function parserService() {
   async function parseIncident(item, status, jiraService) {
     const output = {};
     debug('EVENT: INCIDENT');
-    output.title = item.title;
+    output.title = formatTitle(item.title);
     output.type = 'incident';
     output.clusters = await parseCluster(item.title);
     output.locations = await parseLocation(item.description);
@@ -454,7 +461,7 @@ function parserService() {
   async function parseApi(item, jiraService) {
     const output = {};
     debug('EVENT: API');
-    output.title = item.title;
+    output.title = formatTitle(item.title);
     output.type = 'api';
     output.description = item.description;
     output.guid = item.guid.replace(/\r\n/g, '');
