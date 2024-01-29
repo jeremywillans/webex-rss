@@ -26,17 +26,23 @@ function processEnv(env) {
   return result;
 }
 
+// Initialize Device Room Status
+let deviceEnabled = false;
+const announceDevice = processEnv(process.env.ANNOUNCE_DEVICE) || false;
+
 let jiraService = require('./src/jiraService');
 const parserService = require('./src/parserService');
 
 // Define RSS Feeds
-const incidentFeed = 'https://status.webex.com/history.rss';
-const announcementFeed = 'https://status.webex.com/maintenance.rss';
+const incidentFeed = 'https://status.webex.com/incidents.rss';
+const maintenanceFeed = 'https://status.webex.com/maintenances.rss';
+const announcementFeed = 'https://status.webex.com/updates-upgrades.rss';
 const apiFeed = 'https://developer.webex.com/api/content/changelog/feed';
 
 // Load RSS Watcher Instances
 const interval = processEnv(process.env.RSS_INTERVAL) * 60 || 300;
 const incidentWatcher = new Watcher(incidentFeed, interval);
+const maintenanceWatcher = new Watcher(maintenanceFeed, interval);
 const announcementWatcher = new Watcher(announcementFeed, interval);
 const apiWatcher = new Watcher(apiFeed, interval);
 
@@ -51,11 +57,6 @@ incidentWatcher.on('new entries', (entries) => {
       const itemType = item.description.substring(typeIndex + 9, typeEnd);
       debug(`detected as ${itemType}`);
       switch (itemType) {
-        case 'scheduled':
-        case 'in progress':
-        case 'completed':
-          parserService.parseMaintenance(item, itemType, jiraService);
-          break;
         case 'resolved':
         case 'monitoring':
         case 'identified':
@@ -70,10 +71,42 @@ incidentWatcher.on('new entries', (entries) => {
   });
 });
 
+// Process Incident Feed
+maintenanceWatcher.on('new entries', (entries) => {
+  entries.forEach((item) => {
+    // Identify Item Type
+    debug('new maintenance item');
+    const typeIndex = item.description.indexOf('<strong >');
+    if (typeIndex !== -1) {
+      const typeEnd = item.description.indexOf('</strong >', typeIndex);
+      const itemType = item.description.substring(typeIndex + 9, typeEnd);
+      debug(`detected as ${itemType}`);
+      switch (itemType) {
+        case 'scheduled':
+        case 'in progress':
+        case 'completed':
+          parserService.parseMaintenance(item, itemType, jiraService);
+          break;
+        default:
+          debug('EVENT: UNKNOWN');
+          debug(item);
+      }
+    }
+  });
+});
+
 // Process Announcement Feed
 announcementWatcher.on('new entries', (entries) => {
   entries.forEach((item) => {
     debug('new announce item');
+    if (deviceEnabled && item.title.match(/^RoomOS.*/)) {
+      debug('matches device, sending to device room also');
+      parserService.parseDevice(item, jiraService);
+      if (!announceDevice) {
+        debug('skip sending device to ann space');
+        return;
+      }
+    }
     parserService.parseAnnouncement(item, jiraService);
   });
 });
@@ -143,6 +176,13 @@ async function init() {
     console.log(chalk.red('ERROR: Bot is not a member of the Announcement Room!'));
     process.exit(2);
   }
+  try {
+    const deviceRoom = await parserService.getRoom(process.env.DEVICE_ROOM);
+    console.log(chalk.green(`Device Room: ${deviceRoom.title}`));
+    deviceEnabled = true;
+  } catch (error) {
+    console.log(chalk.yellow('WARN: Bot is not a member of the Device Room!'));
+  }
   let apiEnabled = false;
   try {
     const apiRoom = await parserService.getRoom(process.env.API_ROOM);
@@ -152,6 +192,7 @@ async function init() {
     console.log(chalk.yellow('WARN: Bot is not a member of the API Room!'));
   }
   incidentWatcher.start();
+  maintenanceWatcher.start();
   announcementWatcher.start();
   if (apiEnabled) {
     apiWatcher.start();

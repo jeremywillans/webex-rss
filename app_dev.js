@@ -28,12 +28,17 @@ function processEnv(env) {
   return result;
 }
 
+// Initialize Device Room Status
+let deviceEnabled = false;
+const announceDevice = processEnv(process.env.ANNOUNCE_DEVICE) || false;
+
 let jiraService = require('./src/jiraService');
 const parserService = require('./src/parserService');
 
 // Define RSS Feeds
-const incidentFeed = 'https://status.webex.com/history.rss';
-const announcementFeed = 'https://status.webex.com/maintenance.rss';
+const incidentFeed = 'https://status.webex.com/incidents.rss';
+const maintenanceFeed = 'https://status.webex.com/maintenances.rss';
+const announcementFeed = 'https://status.webex.com/updates-upgrades.rss';
 const apiFeed = 'https://developer.webex.com/api/content/changelog/feed';
 
 // Define Interval (default 5mins)
@@ -52,16 +57,33 @@ feeder.on('incident', (item) => {
     const itemType = item.description.substring(typeIndex + 9, typeEnd);
     debug(`detected as ${itemType}`);
     switch (itemType) {
-      case 'scheduled':
-      case 'in progress':
-      case 'completed':
-        parserService.parseMaintenance(item, itemType, jiraService);
-        break;
       case 'resolved':
       case 'monitoring':
       case 'identified':
       case 'investigating':
         parserService.parseIncident(item, itemType, jiraService);
+        break;
+      default:
+        debug('EVENT: UNKNOWN');
+        debug(item);
+    }
+  }
+});
+
+// Process Maintenance Feed
+feeder.on('maintenance', (item) => {
+  // Identify Item Type
+  debug('new maintenance item');
+  const typeIndex = item.description.indexOf('<strong >');
+  if (typeIndex !== -1) {
+    const typeEnd = item.description.indexOf('</strong >', typeIndex);
+    const itemType = item.description.substring(typeIndex + 9, typeEnd);
+    debug(`detected as ${itemType}`);
+    switch (itemType) {
+      case 'scheduled':
+      case 'in progress':
+      case 'completed':
+        parserService.parseMaintenance(item, itemType, jiraService);
         break;
       default:
         debug('EVENT: UNKNOWN');
@@ -79,6 +101,14 @@ feeder.on('announcement', (item) => {
     return;
   }
   debug('new announce item');
+  if (deviceEnabled && item.title.match(/^RoomOS.*/)) {
+    debug('matches device title string');
+    parserService.parseDevice(item, jiraService);
+    if (!announceDevice) {
+      debug('skip sending device to ann space');
+      return;
+    }
+  }
   parserService.parseAnnouncement(item, jiraService);
 });
 
@@ -140,6 +170,13 @@ async function init() {
     console.log(chalk.red('ERROR: Bot is not a member of the Announcement Room!'));
     process.exit(2);
   }
+  try {
+    const deviceRoom = await parserService.getRoom(process.env.DEVICE_ROOM);
+    console.log(chalk.green(`Device Room: ${deviceRoom.title}`));
+    deviceEnabled = true;
+  } catch (error) {
+    console.log(chalk.yellow('WARN: Bot is not a member of the Device Room!'));
+  }
   let apiEnabled = false;
   try {
     const apiRoom = await parserService.getRoom(process.env.API_ROOM);
@@ -152,6 +189,11 @@ async function init() {
     url: incidentFeed,
     refresh: interval,
     eventName: 'incident',
+  });
+  feeder.add({
+    url: maintenanceFeed,
+    refresh: interval,
+    eventName: 'maintenance',
   });
   feeder.add({
     url: announcementFeed,

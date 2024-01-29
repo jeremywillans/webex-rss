@@ -109,6 +109,9 @@ function jiraService() {
       case 'announcement':
         prefix = '[ANN] ';
         break;
+      case 'device':
+        prefix = '[ROOMOS] ';
+        break;
       case 'api':
         prefix = '[API] ';
         break;

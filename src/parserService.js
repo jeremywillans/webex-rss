@@ -53,14 +53,14 @@ if (process.env.CLUSTER_FILTER) {
 }
 
 function parserService() {
-  async function parseCluster(content) {
+  function parseCluster(content) {
     const clusters = [];
     // Webex Teams
-    // if (content.match(/\bWebex Teams\b/)) {
+    // if (content.match(/\bWebex Teams[,\s]/)) {
     //   clusters.push('Webex Teams');
     // }
     // Webex Meetings Clusters
-    if (content.match(/\bSan Jose\b/)) {
+    if (content.match(/\bSan Jose[,\s]/)) {
       clusters.push('AC');
       clusters.push('AW');
       clusters.push('B');
@@ -72,127 +72,144 @@ function parserService() {
       clusters.push('S');
       clusters.push('U');
     }
-    if (content.match(/\bLondon\b/)) {
+    if (content.match(/\bLondon[,\s]/)) {
       clusters.push('AI');
       clusters.push('BI');
       clusters.push('I');
       clusters.push('W');
     }
-    if (content.match(/\bVirginia\b/)) {
+    if (content.match(/\bVirginia[,\s]/)) {
       clusters.push('AA');
       clusters.push('AB');
     }
-    if (content.match(/\bSingapore\b/)) {
+    if (content.match(/\bSingapore[,\s]/)) {
       clusters.push('AS');
     }
-    if (content.match(/\bFedRAMP\b/)) {
+    if (content.match(/\bFedRAMP[,\s]/)) {
       clusters.push('F');
     }
-    if (content.match(/\bSydney\b/)) {
+    if (content.match(/\bSydney[,\s]/)) {
       clusters.push('AP');
     }
-    if (content.match(/\bAustralia\b/)) {
+    if (content.match(/\bAustralia[,\s]/)) {
       clusters.push('AP');
     }
-    if (content.match(/\bAPAC\b/)) {
+    if (content.match(/\bAPAC[,\s]/)) {
       clusters.push('AS');
       clusters.push('AP');
       clusters.push('BY');
     }
-    if (content.match(/\bAA\b/)) {
+    if (content.match(/\bAA[,\s]/)) {
       clusters.push('AA');
     }
-    if (content.match(/\bAB\b/)) {
+    if (content.match(/\bAB[,\s]/)) {
       clusters.push('AB');
     }
-    if (content.match(/\bAC\b/)) {
+    if (content.match(/\bAC[,\s]/)) {
       clusters.push('AC');
     }
-    if (content.match(/\bAO\b/)) {
+    if (content.match(/\bAO[,\s]/)) {
       clusters.push('AO');
     }
-    if (content.match(/\bAP\b/)) {
+    if (content.match(/\bAP[,\s]/)) {
       clusters.push('AP');
     }
-    if (content.match(/\bAS\b/)) {
+    if (content.match(/\bAS[,\s]/)) {
       clusters.push('AS');
     }
-    if (content.match(/\bAW\b/)) {
+    if (content.match(/\bAW[,\s]/)) {
       clusters.push('AW');
     }
-    if (content.match(/\bB\b/)) {
+    if (content.match(/\bB[,\s]/)) {
       clusters.push('B');
     }
-    if (content.match(/\bBI\b/)) {
+    if (content.match(/\bBI[,\s]/)) {
       clusters.push('BI');
     }
-    if (content.match(/\bBY\b/)) {
+    if (content.match(/\bBY[,\s]/)) {
       clusters.push('BY');
     }
-    if (content.match(/\bI\b/)) {
+    if (content.match(/\bI[,\s]/)) {
       clusters.push('I');
     }
-    if (content.match(/\bIB\b/)) {
+    if (content.match(/\bIB[,\s]/)) {
       clusters.push('IB');
     }
-    if (content.match(/\bIC\b/)) {
+    if (content.match(/\bIC[,\s]/)) {
       clusters.push('IC');
     }
-    if (content.match(/\bIE\b/)) {
+    if (content.match(/\bIE[,\s]/)) {
       clusters.push('IE');
     }
-    if (content.match(/\bIJ\b/)) {
+    if (content.match(/\bIJ[,\s]/)) {
       clusters.push('IJ');
     }
-    if (content.match(/\bIK\b/)) {
+    if (content.match(/\bIK[,\s]/)) {
       clusters.push('IJ');
     }
-    if (content.match(/\bE\b/)) {
+    if (content.match(/\bE[,\s]/)) {
       clusters.push('E');
     }
-    if (content.match(/\bF\b/)) {
+    if (content.match(/\bF[,\s]/)) {
       clusters.push('F');
     }
-    if (content.match(/\bJ\b/)) {
+    if (content.match(/\bJ[,\s]/)) {
       clusters.push('J');
     }
-    if (content.match(/\bL\b/)) {
+    if (content.match(/\bL[,\s]/)) {
       clusters.push('L');
     }
-    if (content.match(/\bM\b/)) {
+    if (content.match(/\bM[,\s]/)) {
       clusters.push('M');
     }
-    if (content.match(/\bR\b/)) {
+    if (content.match(/\bR[,\s]/)) {
       clusters.push('R');
     }
-    if (content.match(/\bS\b/)) {
+    if (content.match(/\bS[,\s]/)) {
       clusters.push('S');
     }
-    if (content.match(/\bU\b/)) {
+    if (content.match(/\bU[,\s]/)) {
       clusters.push('U');
     }
-    if (content.match(/\bW\b/)) {
+    if (content.match(/\bW[,\s]/)) {
       clusters.push('W');
     }
     return clusters;
   }
 
-  async function formatDescription(description, status) {
+  function parseLocation(description) {
+    let locations = [];
+    const startLoc = description.indexOf('Locations:</strong>');
+    const endLoc = description.indexOf(' </font><br /><br />', startLoc);
+    if (startLoc !== -1 && endLoc !== -1) {
+      locations = description.substring(startLoc + 20, endLoc);
+      if (locations === 'f') {
+        locations = 'F';
+      }
+      locations = locations.split(',');
+    }
+    return locations;
+  }
+
+  function formatDescription(description, status) {
     const endDesc = description.indexOf('</small>');
+    const statusLoc = description.indexOf(status);
     let formatted = description;
     if (endDesc !== -1) {
       formatted = description.substring(
         // 22 equates for '<strong >' and '</strong > - '
-        status.length + 22,
+        statusLoc + status.length + 13,
         // 8 equates to '</small>'
         endDesc + 8,
       );
     }
     formatted = formatted.replace(/\r?\n|\r/g, '<br />');
+    formatted = formatted.replace(/<strong>-- /g, '<strong>');
+    formatted = formatted.replace(/ --<\/strong>/g, '</strong>');
     return formatted;
   }
 
-  async function formatBlockquote(status) {
+  function formatBlockquote(status) {
     let blockquote;
     switch (status) {
       case 'investigating':
@@ -249,6 +266,13 @@ function parserService() {
     return incRoom;
   }
 
+  function formatTitle(title) {
+    let formatted = title;
+    formatted = formatted.replace(/'/g, '"');
+    formatted = formatted.replace('com/', 'com');
+    return formatted;
+  }
+
   function toTitleCase(title) {
     return title.replace(
       /\w\S*/g,
@@ -259,9 +283,10 @@ function parserService() {
   async function parseMaintenance(item, status, jiraService) {
     const output = {};
     debug('EVENT: MAINTENANCE');
-    output.title = item.title;
+    output.title = formatTitle(item.title);
     output.type = 'maintenance';
-    output.clusters = await parseCluster(item.title);
+    output.clusters = parseCluster(item.title);
+    output.locations = parseLocation(item.description);
 
     if (output.clusters.length > 0) {
       if (
@@ -276,20 +301,23 @@ function parserService() {
 
     // If defined, identify Start/End Times
     const startIndex = item.description.indexOf('Start: ');
-    if (startIndex !== -1) {
+    const endIndex = item.description.indexOf('Complete: ');
+    if (startIndex !== -1 && endIndex !== -1) {
       const startEnd = item.description.indexOf('\r', startIndex);
       const startTime = item.description.substring(startIndex + 7, startEnd);
       output.startTime = startTime;
-    }
-    const endIndex = item.description.indexOf('Complete: ');
-    if (endIndex !== -1) {
       const endEnd = item.description.indexOf('\r', endIndex);
       const endTime = item.description.substring(endIndex + 10, endEnd);
       output.endTime = endTime;
+      // Remove from Item
+      const startSchedule = item.description.indexOf('\r\n\r\n<strong>-- Scheduled Maintenance Window');
+      const newDesc = `${item.description.substring(0, startSchedule)}${item.description.substring(endEnd, item.description.length)}`;
+      // eslint-disable-next-line no-param-reassign
+      item.description = newDesc;
     }
 
-    output.description = await formatDescription(item.description, status);
-    output.blockquote = await formatBlockquote(status);
+    output.description = formatDescription(item.description, status);
+    output.blockquote = formatBlockquote(status);
     output.guid = item.guid;
 
     let html = `<strong><a href=${output.guid}>${
@@ -303,6 +331,14 @@ function parserService() {
         html += `<br><strong>Clusters: </strong>${clusters}`;
       } else {
         html += `<br><strong>Cluster: </strong>${clusters}`;
+      }
+    }
+    if (output.locations.length > 0) {
+      const locations = output.locations.join(', ');
+      if (locations.includes(',')) {
+        html += `<br><strong>Locations: </strong>${locations}`;
+      } else {
+        html += `<br><strong>Location: </strong>${locations}`;
       }
     }
     if (output.startTime && output.endTime) {
@@ -321,11 +357,12 @@ function parserService() {
   async function parseIncident(item, status, jiraService) {
     const output = {};
     debug('EVENT: INCIDENT');
-    output.title = item.title;
+    output.title = formatTitle(item.title);
     output.type = 'incident';
-    output.clusters = await parseCluster(item.title);
-    output.description = await formatDescription(item.description, status);
-    output.blockquote = await formatBlockquote(status);
+    output.clusters = parseCluster(item.title);
+    output.locations = parseLocation(item.description);
+    output.description = formatDescription(item.description, status);
+    output.blockquote = formatBlockquote(status);
     output.guid = item.guid;
 
     if (output.clusters.length > 0) {
@@ -352,6 +389,14 @@ function parserService() {
         html += `<br><strong>Cluster: </strong>${output.clusters}`;
       }
     }
+    if (output.locations.length > 0) {
+      const locations = output.locations.join(', ');
+      if (locations.includes(',')) {
+        html += `<br><strong>Locations: </strong>${locations}`;
+      } else {
+        html += `<br><strong>Location: </strong>${locations}`;
+      }
+    }
     if (jiraService) {
       const response = await jiraService.processJira(output);
       const jiraType = toTitleCase(process.env.JIRA_ISSUE);
@@ -367,8 +412,8 @@ function parserService() {
     debug('EVENT: ANNOUNCEMENT');
     output.title = item.title;
     output.type = 'announcement';
-    output.clusters = await parseCluster(item.title);
-    output.description = await formatDescription(item.description, 22);
+    output.clusters = parseCluster(item.title);
+    output.description = formatDescription(item.description, 22);
     output.guid = item.guid.replace(/\r\n/g, '');
     output.link = item.link;
 
@@ -392,15 +437,36 @@ function parserService() {
     await postMessage(process.env.ANNOUNCE_ROOM, html);
   }
 
+  async function parseDevice(item, jiraService) {
+    const output = {};
+    debug('EVENT: DEVICE');
+    output.title = item.title;
+    output.type = 'device';
+    output.description = formatDescription(item.description, 22);
+    output.guid = item.guid.replace(/\r\n/g, '');
+    output.link = item.link;
+
+    let html = `<strong>${output.title}</strong><blockquote class="info">`;
+    html += `<strong>Maintenance Calendar: </strong>${output.link}`;
+    if (jiraService) {
+      const response = await jiraService.processJira(output);
+      const jiraType = toTitleCase(process.env.JIRA_ISSUE);
+      html += `<br><strong>JIRA ${jiraType}: </strong><a href=${response.url}>${response.key}</a>`;
+    }
+    html += `<br><br>${output.description}`;
+
+    await postMessage(process.env.DEVICE_ROOM, html);
+  }
+
   async function parseApi(item, jiraService) {
     const output = {};
     debug('EVENT: API');
-    output.title = item.title;
+    output.title = formatTitle(item.title);
     output.type = 'api';
     output.description = item.description;
     output.guid = item.guid.replace(/\r\n/g, '');
     output.type = item['rss:type']['#'] || 'New';
-    output.blockquote = await formatBlockquote(output.type);
+    output.blockquote = formatBlockquote(output.type);
     output.link = item.link;
 
     let html = `<strong><a href='${output.link}'>${output.title}</a></strong><blockquote class="${
@@ -426,6 +492,7 @@ function parserService() {
     parseMaintenance,
     parseIncident,
     parseAnnouncement,
+    parseDevice,
     parseApi,
   };
 }

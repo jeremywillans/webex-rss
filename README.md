@@ -42,6 +42,8 @@ These variables can be individually defined in Docker, or loaded as an `.env` fi
 | MAINT_ROOM | **Required** | ` ` | RoomId for Webex Maintenance Space
 | ANNOUNCE_ROOM | **Required** | ` ` | RoomId for Webex Announcement Space
 | API_ROOM | Optional | ` ` | RoomId for Webex Developer API Space
+| DEVICE_ROOM | Optional | ` ` | RoomId for Webex RoomOS Space
+| ANNOUNCE_DEVICE | Optional | `false` | Post RoomOS Messages in Announcement Space (valid when RoomOS Space is enabled)
 | RSS_INTERVAL | Optional | `5` | Interval for RSS Checks (Minutes)
 | CLUSTER_FILTER | Optional | ` ` | Comma Separated List of Cluster Names to include.
 | GLOBAL_AGENT_HTTP_PROXY | Optional | ` ` | Container HTTP Proxy Setting
