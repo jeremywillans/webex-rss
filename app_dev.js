@@ -1,38 +1,33 @@
-/* eslint-disable no-console */
-const debug = require('debug')('webex-rss:appDev');
 const RssFeedEmitter = require('rss-feed-emitter');
-const dotenv = require('dotenv');
 const { bootstrap } = require('global-agent');
-const chalk = require('chalk');
+// eslint-disable-next-line object-curly-newline
+const { cleanEnv, str, bool, num } = require('envalid');
+const logger = require('./src/logger')('appDev');
+const { version } = require('./package.json');
 
-debug('Loading DEV File');
-
-// Load ENV if not present
-if (!process.env.TOKEN) {
-  debug('Load from .env');
-  dotenv.config();
-}
+logger.info('Loading DEV File');
 
 // Initialize Proxy Server, if defined.
 if (process.env.GLOBAL_AGENT_HTTP_PROXY) {
-  debug('invoke global agent proxy');
+  logger.debug('invoke global agent proxy');
   bootstrap();
 }
 
-function processEnv(env) {
-  let result = env;
-  if (!Number.isNaN(Number(result))) result = Number(result);
-  if (result === 'true') result = true;
-  if (result === 'false') result = false;
-  if (result === 'null') result = null;
-  return result;
-}
+// Process ENV Parameters
+const env = cleanEnv(process.env, {
+  ANNOUNCE_DEVICE: bool({ default: false }),
+  RSS_INTERVAL: num({ default: 5 }),
+  INC_ROOM: str(),
+  MAINT_ROOM: str(),
+  ANNOUNCE_ROOM: str(),
+  API_ROOM: str({ default: undefined }),
+  DEVICE_ROOM: str({ default: undefined }),
+});
 
 // Initialize Device Room Status
-let deviceEnabled = false;
-const announceDevice = processEnv(process.env.ANNOUNCE_DEVICE) || false;
+const deviceEnabled = false;
+const announceDevice = env.ANNOUNCE_DEVICE;
 
-let jiraService = require('./src/jiraService');
 const parserService = require('./src/parserService');
 
 // Define RSS Feeds
@@ -42,7 +37,7 @@ const announcementFeed = 'https://status.webex.com/updates-upgrades.rss';
 const apiFeed = 'https://developer.webex.com/api/content/changelog/feed';
 
 // Define Interval (default 5mins)
-const interval = processEnv(process.env.RSS_INTERVAL) * 60000 || 300000;
+const interval = env.RSS_INTERVAL * 60000;
 
 // Load Feed Emitter
 const feeder = new RssFeedEmitter();
@@ -50,22 +45,22 @@ const feeder = new RssFeedEmitter();
 // Process Incident Feed
 feeder.on('incident', (item) => {
   // Identify Item Type
-  debug('new incident item');
+  logger.debug('new incident item');
   const typeIndex = item.description.indexOf('<strong >');
   if (typeIndex !== -1) {
     const typeEnd = item.description.indexOf('</strong >', typeIndex);
     const itemType = item.description.substring(typeIndex + 9, typeEnd);
-    debug(`detected as ${itemType}`);
+    logger.debug(`detected as ${itemType}`);
     switch (itemType) {
       case 'resolved':
       case 'monitoring':
       case 'identified':
       case 'investigating':
-        parserService.parseIncident(item, itemType, jiraService);
+        parserService.parseIncident(item, itemType);
         break;
       default:
-        debug('EVENT: UNKNOWN');
-        debug(item);
+        logger.debug('EVENT: UNKNOWN');
+        logger.debug(item);
     }
   }
 });
@@ -73,21 +68,21 @@ feeder.on('incident', (item) => {
 // Process Maintenance Feed
 feeder.on('maintenance', (item) => {
   // Identify Item Type
-  debug('new maintenance item');
+  logger.debug('new maintenance item');
   const typeIndex = item.description.indexOf('<strong >');
   if (typeIndex !== -1) {
     const typeEnd = item.description.indexOf('</strong >', typeIndex);
     const itemType = item.description.substring(typeIndex + 9, typeEnd);
-    debug(`detected as ${itemType}`);
+    logger.debug(`detected as ${itemType}`);
     switch (itemType) {
       case 'scheduled':
       case 'in progress':
       case 'completed':
-        parserService.parseMaintenance(item, itemType, jiraService);
+        parserService.parseMaintenance(item, itemType);
         break;
       default:
-        debug('EVENT: UNKNOWN');
-        debug(item);
+        logger.debug('EVENT: UNKNOWN');
+        logger.debug(item);
     }
   }
 });
@@ -96,20 +91,20 @@ feeder.on('maintenance', (item) => {
 feeder.on('announcement', (item) => {
   // Discard Older Items from Announcement Feed
   const d = new Date();
-  d.setMonth(d.getMonth() - 1);
+  d.setMonth(d.getMonth() - 2);
   if (item.pubdate < d) {
     return;
   }
-  debug('new announce item');
+  logger.debug('new announce item');
   if (deviceEnabled && item.title.match(/^RoomOS.*/)) {
-    debug('matches device title string');
-    parserService.parseDevice(item, jiraService);
+    logger.debug('matches device title string');
+    parserService.parseDevice(item);
     if (!announceDevice) {
-      debug('skip sending device to ann space');
+      logger.debug('skip sending device to ann space');
       return;
     }
   }
-  parserService.parseAnnouncement(item, jiraService);
+  parserService.parseAnnouncement(item);
 });
 
 // Process API Feed
@@ -120,70 +115,61 @@ feeder.on('api', (item) => {
   if (item.pubdate < d) {
     return;
   }
-  debug('new api item');
-  parserService.parseApi(item, jiraService);
+  logger.debug('new api item');
+  parserService.parseApi(item);
 });
 
 // Handle Incident Feed Errors
 feeder.on('error', (error) => {
-  debug(error);
+  logger.error(`Feed Error: ${error}`);
 });
 
 // Init Function
 async function init() {
+  logger.info(`Webex RSS Integration, v${version}`);
   try {
     const bot = await parserService.getBot();
-    console.log(chalk.green(`Bot Loaded: ${bot.displayName} (${bot.emails[0]})`));
+    logger.info(`Bot Loaded: ${bot.displayName} (${bot.emails[0]})`);
   } catch (error) {
-    console.log(chalk.red('ERROR: Unable to load Webex Bot, check Token.'));
-    debug(error.message);
+    logger.error('ERROR: Unable to load Webex Bot, check Token.');
+    logger.debug(error.message);
     process.exit(2);
   }
   try {
-    if (process.env.JIRA_SITE) {
-      const jiraProject = await jiraService.getProject(process.env.JIRA_PROJECT);
-      console.log(chalk.green(`JIRA Project: ${jiraProject.name}`));
-    }
-  } catch (error) {
-    console.log(chalk.yellow('WARN: Unable to verify JIRA Project'));
-    jiraService = false;
-    debug(error.message);
-  }
-  try {
     const incRoom = await parserService.getRoom(process.env.INC_ROOM);
-    console.log(chalk.green(`Inc Room: ${incRoom.title}`));
+    logger.info(`Inc Room: ${incRoom.title}`);
   } catch (error) {
-    console.log(chalk.red('ERROR: Bot is not a member of the Incident Room!'));
+    logger.error('ERROR: Bot is not a member of the Incident Room!');
     process.exit(2);
   }
   try {
     const maintRoom = await parserService.getRoom(process.env.MAINT_ROOM);
-    console.log(chalk.green(`Maint Room: ${maintRoom.title}`));
+    logger.info(`Maint Room: ${maintRoom.title}`);
   } catch (error) {
-    console.log(chalk.red('ERROR: Bot is not a member of the Maintenance Room!'));
+    logger.error('ERROR: Bot is not a member of the Maintenance Room!');
     process.exit(2);
   }
   try {
     const announceRoom = await parserService.getRoom(process.env.ANNOUNCE_ROOM);
-    console.log(chalk.green(`Announce Room: ${announceRoom.title}`));
+    logger.info(`Announce Room: ${announceRoom.title}`);
   } catch (error) {
-    console.log(chalk.red('ERROR: Bot is not a member of the Announcement Room!'));
+    logger.error('ERROR: Bot is not a member of the Announcement Room!');
     process.exit(2);
   }
-  try {
-    const deviceRoom = await parserService.getRoom(process.env.DEVICE_ROOM);
-    console.log(chalk.green(`Device Room: ${deviceRoom.title}`));
-    deviceEnabled = true;
-  } catch (error) {
-    console.log(chalk.yellow('WARN: Bot is not a member of the Device Room!'));
-  }
+  // try {
+  //   const deviceRoom = await parserService.getRoom(process.env.DEVICE_ROOM);
+  //   logger.info(`Device Room: ${deviceRoom.title}`);
+  //   deviceEnabled = true;
+  // } catch (error) {
+  //   logger.warn('WARN: Bot is not a member of the Device Room!');
+  // }
   let apiEnabled = false;
   try {
     const apiRoom = await parserService.getRoom(process.env.API_ROOM);
-    console.log(chalk.green(`API Room: ${apiRoom.title}`));
+    logger.info(`API Room: ${apiRoom.title}`);
     apiEnabled = true;
   } catch (error) {
-    console.log(chalk.yellow('WARN: Bot is not a member of the API Room!'));
+    logger.warn('WARN: Bot is not a member of the API Room!');
   }
   feeder.add({
     url: incidentFeed,
@@ -207,7 +193,7 @@ async function init() {
       eventName: 'api',
     });
   }
-  console.log(chalk.green('Startup Complete!'));
+  logger.info('Startup Complete!');
 }
 
 // Initiate
@@ -215,8 +201,8 @@ init();
 
 // Handle Graceful Shutdown (CTRL+C)
 process.on('SIGINT', () => {
-  debug('Stopping...');
+  logger.debug('Stopping...');
   feeder.destroy();
-  debug('Feeds Stopped.');
+  logger.debug('Feeds Stopped.');
   process.exit(0);
 });
