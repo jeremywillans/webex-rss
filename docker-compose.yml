@@ -1,0 +1,22 @@
+version: '3'
+
+services:
+  webex-rss:
+    image: webex-rss:latest
+    build: .
+    container_name: webex-rss
+    environment:
+      # REPLACE BELOW WITH PREREQUISITE VARIABLES 
+      TOKEN: XXXXX
+      INC_ROOM: XXXXX
+      MAINT_ROOM: XXXXX
+      ANNOUNCE_ROOM: XXXXX
+      #DEVICE_ROOM: XXXXX # Optional - Pending
+      #API_ROOM: XXXXX # Optional
+      CONSOLE_LEVEL: info # Set Debug for detailed logging
+    restart: unless-stopped
+    networks:
+      - internal
+
+networks:
+  internal:
