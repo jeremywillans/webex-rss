@@ -1,41 +1,16 @@
-const debug = require('debug')('webex-rss:parserService');
-const Webex = require('webex');
-const chalk = require('chalk');
-const promiseRetry = require('promise-retry');
+const { cleanEnv, str } = require('envalid');
+const logger = require('./logger')('parserService');
+const httpService = require('./httpService');
 
-// Load Webex SDK
-let webex;
-try {
-  webex = Webex.init({
-    credentials: {
-      access_token: process.env.TOKEN,
-    },
-  });
-} catch (error) {
-  // eslint-disable-next-line no-console
-  console.log(chalk.red('ERROR: Unable to load Webex Bot, check Token.'));
-  debug(error.message);
-  process.exit(2);
-}
-
-function processEnv(env) {
-  let result = env;
-  if (!Number.isNaN(Number(result))) result = Number(result);
-  if (result === 'true') result = true;
-  if (result === 'false') result = false;
-  if (result === 'null') result = null;
-  return result;
-}
-
-// Load Retry Variables
-let retryCount = 5;
-if (process.env.RETRY_COUNT) {
-  retryCount = processEnv(process.env.RETRY_COUNT);
-}
-let retryInterval = 1000; // Default 1s
-if (process.env.RETRY_COUNT) {
-  retryInterval = processEnv(process.env.RETRY_COUNT) * 1000;
-}
+// Process ENV Parameters
+const env = cleanEnv(process.env, {
+  TOKEN: str(),
+  INC_ROOM: str(),
+  MAINT_ROOM: str(),
+  ANNOUNCE_ROOM: str(),
+  API_ROOM: str({ default: undefined }),
+  DEVICE_ROOM: str({ default: undefined }),
+});
 
 // Parse Cluster Filter ENV
 let clusterFilter = [];
@@ -43,13 +18,11 @@ if (process.env.CLUSTER_FILTER) {
   try {
     clusterFilter = process.env.CLUSTER_FILTER.split(',');
   } catch (error) {
-    // eslint-disable-next-line no-console
-    console.log(chalk.red('Unable to Parse Cluster Filter...'));
-    debug(error.message);
+    logger.error('Unable to Parse Cluster Filter...');
+    logger.debug(error.message);
     process.exit(2);
   }
-  // eslint-disable-next-line no-console
-  console.log(chalk.green(`Loaded Cluster Filter: ${clusterFilter}`));
+  logger.info(`Loaded Cluster Filter: ${clusterFilter}`);
 }
 
 function parserService() {
@@ -237,33 +210,14 @@ function parserService() {
     return blockquote;
   }
 
-  async function postMessage(roomId, html) {
-    promiseRetry(
-      { retries: retryCount, minTimeout: retryInterval },
-      async (retry, number) => {
-        debug(`message send attempt ${number}`);
-        await webex.messages.create({ html, roomId }).catch(retry);
-      },
-    ).then(
-      () => {
-        debug('message sent');
-      },
-      (err) => {
-        // eslint-disable-next-line no-console
-        console.log(chalk.red('Unable to send Message...'));
-        debug(err.message);
-      },
-    );
-  }
-
   async function getBot() {
-    const bot = await webex.people.get('me');
+    const bot = await httpService.getField(env.TOKEN, 'people/me');
     return bot;
   }
 
   async function getRoom(roomId) {
-    const incRoom = await webex.rooms.get(roomId);
-    return incRoom;
+    const room = await httpService.getField(env.TOKEN, `rooms/${roomId}`);
+    return room;
   }
 
   function formatTitle(title) {
@@ -280,9 +234,9 @@ function parserService() {
     );
   }
 
-  async function parseMaintenance(item, status, jiraService) {
+  async function parseMaintenance(item, status) {
     const output = {};
-    debug('EVENT: MAINTENANCE');
+    logger.debug('EVENT: MAINTENANCE');
     output.title = formatTitle(item.title);
     output.type = 'maintenance';
     output.clusters = parseCluster(item.title);
@@ -294,7 +248,7 @@ function parserService() {
         clusterFilter.length > 0 &&
         !output.clusters.some((c) => clusterFilter.includes(c))
       ) {
-        debug(`Maint not relevant, only matching for ${clusterFilter}`);
+        logger.debug(`Maint not relevant, only matching for ${clusterFilter}`);
         return;
       }
     }
@@ -344,19 +298,14 @@ function parserService() {
     if (output.startTime && output.endTime) {
       html += `<br><strong>Start: </strong>${output.startTime}<br><strong>End: </strong>${output.endTime}`;
     }
-    if (jiraService) {
-      const response = await jiraService.processJira(output);
-      const jiraType = toTitleCase(process.env.JIRA_ISSUE);
-      html += `<br><strong>JIRA ${jiraType}: </strong><a href=${response.url}>${response.key}</a>`;
-    }
     html += `<br><br>${output.description}`;
 
-    await postMessage(process.env.MAINT_ROOM, html);
+    await httpService.postMessage(env.TOKEN, env.MAINT_ROOM, html);
   }
 
-  async function parseIncident(item, status, jiraService) {
+  async function parseIncident(item, status) {
     const output = {};
-    debug('EVENT: INCIDENT');
+    logger.debug('EVENT: INCIDENT');
     output.title = formatTitle(item.title);
     output.type = 'incident';
     output.clusters = parseCluster(item.title);
@@ -371,7 +320,7 @@ function parserService() {
         clusterFilter.length > 0 &&
         !output.clusters.some((c) => clusterFilter.includes(c))
       ) {
-        debug(`Incident not relevant, only matching for ${clusterFilter}`);
+        logger.debug(`Incident not relevant, only matching for ${clusterFilter}`);
         return;
       }
     }
@@ -397,19 +346,14 @@ function parserService() {
         html += `<br><strong>Location: </strong>${locations}`;
       }
     }
-    if (jiraService) {
-      const response = await jiraService.processJira(output);
-      const jiraType = toTitleCase(process.env.JIRA_ISSUE);
-      html += `<br><strong>JIRA ${jiraType}: </strong><a href=${response.url}>${response.key}</a>`;
-    }
     html += `<br><br>${output.description}`;
 
-    await postMessage(process.env.INC_ROOM, html);
+    await httpService.postMessage(env.TOKEN, env.INC_ROOM, html);
   }
 
-  async function parseAnnouncement(item, jiraService) {
+  async function parseAnnouncement(item) {
     const output = {};
-    debug('EVENT: ANNOUNCEMENT');
+    logger.debug('EVENT: ANNOUNCEMENT');
     output.title = item.title;
     output.type = 'announcement';
     output.clusters = parseCluster(item.title);
@@ -427,19 +371,14 @@ function parserService() {
       }
     }
     html += `<strong>Maintenance Calendar: </strong>${output.link}`;
-    if (jiraService) {
-      const response = await jiraService.processJira(output);
-      const jiraType = toTitleCase(process.env.JIRA_ISSUE);
-      html += `<br><strong>JIRA ${jiraType}: </strong><a href=${response.url}>${response.key}</a>`;
-    }
     html += `<br><br>${output.description}`;
 
-    await postMessage(process.env.ANNOUNCE_ROOM, html);
+    await httpService.postMessage(env.TOKEN, env.ANNOUNCE_ROOM, html);
   }
 
-  async function parseDevice(item, jiraService) {
+  async function parseDevice(item) {
     const output = {};
-    debug('EVENT: DEVICE');
+    logger.debug('EVENT: DEVICE');
     output.title = item.title;
     output.type = 'device';
     output.description = formatDescription(item.description, 22);
@@ -448,19 +387,14 @@ function parserService() {
 
     let html = `<strong>${output.title}</strong><blockquote class="info">`;
     html += `<strong>Maintenance Calendar: </strong>${output.link}`;
-    if (jiraService) {
-      const response = await jiraService.processJira(output);
-      const jiraType = toTitleCase(process.env.JIRA_ISSUE);
-      html += `<br><strong>JIRA ${jiraType}: </strong><a href=${response.url}>${response.key}</a>`;
-    }
     html += `<br><br>${output.description}`;
 
-    await postMessage(process.env.DEVICE_ROOM, html);
+    await httpService.postMessage(env.TOKEN, env.DEVICE_ROOM, html);
   }
 
-  async function parseApi(item, jiraService) {
+  async function parseApi(item) {
     const output = {};
-    debug('EVENT: API');
+    logger.debug('EVENT: API');
     output.title = formatTitle(item.title);
     output.type = 'api';
     output.description = item.description;
@@ -472,21 +406,15 @@ function parserService() {
     let html = `<strong><a href='${output.link}'>${output.title}</a></strong><blockquote class="${
       output.blockquote
     }"><strong>Category: </strong>${toTitleCase(output.type)}`;
-    if (jiraService && process.env.JIRA_API_LOG) {
-      const response = await jiraService.processJira(output);
-      const jiraType = toTitleCase(process.env.JIRA_ISSUE);
-      html += `<strong>JIRA ${jiraType}: </strong><a href=${response.url}>${response.key}</a><br>`;
-    }
     html += `${output.description}`;
 
-    await postMessage(process.env.API_ROOM, html);
+    await httpService.postMessage(env.TOKEN, env.API_ROOM, html);
   }
 
   return {
     parseCluster,
     formatDescription,
     formatBlockquote,
-    postMessage,
     getBot,
     getRoom,
     parseMaintenance,
