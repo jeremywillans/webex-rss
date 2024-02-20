@@ -12,144 +12,7 @@ const env = cleanEnv(process.env, {
   DEVICE_ROOM: str({ default: undefined }),
 });
 
-// Parse Cluster Filter ENV
-let clusterFilter = [];
-if (process.env.CLUSTER_FILTER) {
-  try {
-    clusterFilter = process.env.CLUSTER_FILTER.split(',');
-  } catch (error) {
-    logger.error('Unable to Parse Cluster Filter...');
-    logger.debug(error.message);
-    process.exit(2);
-  }
-  logger.info(`Loaded Cluster Filter: ${clusterFilter}`);
-}
-
 function parserService() {
-  function parseCluster(content) {
-    const clusters = [];
-    // Webex Teams
-    // if (content.match(/\bWebex Teams[,\s]/)) {
-    //   clusters.push('Webex Teams');
-    // }
-    // Webex Meetings Clusters
-    if (content.match(/\bSan Jose[,\s]/)) {
-      clusters.push('AC');
-      clusters.push('AW');
-      clusters.push('B');
-      clusters.push('E');
-      clusters.push('F');
-      clusters.push('IB');
-      clusters.push('IE');
-      clusters.push('IJ');
-      clusters.push('S');
-      clusters.push('U');
-    }
-    if (content.match(/\bLondon[,\s]/)) {
-      clusters.push('AI');
-      clusters.push('BI');
-      clusters.push('I');
-      clusters.push('W');
-    }
-    if (content.match(/\bVirginia[,\s]/)) {
-      clusters.push('AA');
-      clusters.push('AB');
-    }
-    if (content.match(/\bSingapore[,\s]/)) {
-      clusters.push('AS');
-    }
-    if (content.match(/\bFedRAMP[,\s]/)) {
-      clusters.push('F');
-    }
-    if (content.match(/\bSydney[,\s]/)) {
-      clusters.push('AP');
-    }
-    if (content.match(/\bAustralia[,\s]/)) {
-      clusters.push('AP');
-    }
-    if (content.match(/\bAPAC[,\s]/)) {
-      clusters.push('AS');
-      clusters.push('AP');
-      clusters.push('BY');
-    }
-    if (content.match(/\bAA[,\s]/)) {
-      clusters.push('AA');
-    }
-    if (content.match(/\bAB[,\s]/)) {
-      clusters.push('AB');
-    }
-    if (content.match(/\bAC[,\s]/)) {
-      clusters.push('AC');
-    }
-    if (content.match(/\bAO[,\s]/)) {
-      clusters.push('AO');
-    }
-    if (content.match(/\bAP[,\s]/)) {
-      clusters.push('AP');
-    }
-    if (content.match(/\bAS[,\s]/)) {
-      clusters.push('AS');
-    }
-    if (content.match(/\bAW[,\s]/)) {
-      clusters.push('AW');
-    }
-    if (content.match(/\bB[,\s]/)) {
-      clusters.push('B');
-    }
-    if (content.match(/\bBI[,\s]/)) {
-      clusters.push('BI');
-    }
-    if (content.match(/\bBY[,\s]/)) {
-      clusters.push('BY');
-    }
-    if (content.match(/\bI[,\s]/)) {
-      clusters.push('I');
-    }
-    if (content.match(/\bIB[,\s]/)) {
-      clusters.push('IB');
-    }
-    if (content.match(/\bIC[,\s]/)) {
-      clusters.push('IC');
-    }
-    if (content.match(/\bIE[,\s]/)) {
-      clusters.push('IE');
-    }
-    if (content.match(/\bIJ[,\s]/)) {
-      clusters.push('IJ');
-    }
-    if (content.match(/\bIK[,\s]/)) {
-      clusters.push('IJ');
-    }
-    if (content.match(/\bE[,\s]/)) {
-      clusters.push('E');
-    }
-    if (content.match(/\bF[,\s]/)) {
-      clusters.push('F');
-    }
-    if (content.match(/\bJ[,\s]/)) {
-      clusters.push('J');
-    }
-    if (content.match(/\bL[,\s]/)) {
-      clusters.push('L');
-    }
-    if (content.match(/\bM[,\s]/)) {
-      clusters.push('M');
-    }
-    if (content.match(/\bR[,\s]/)) {
-      clusters.push('R');
-    }
-    if (content.match(/\bS[,\s]/)) {
-      clusters.push('S');
-    }
-    if (content.match(/\bU[,\s]/)) {
-      clusters.push('U');
-    }
-    if (content.match(/\bW[,\s]/)) {
-      clusters.push('W');
-    }
-    return clusters;
-  }
-
   function parseLocation(description) {
     let locations = [];
     const startLoc = description.indexOf('Locations:</strong>');
@@ -239,19 +102,7 @@ function parserService() {
     logger.debug('EVENT: MAINTENANCE');
     output.title = formatTitle(item.title);
     output.type = 'maintenance';
-    output.clusters = parseCluster(item.title);
     output.locations = parseLocation(item.description);
-
-    if (output.clusters.length > 0) {
-      if (
-        // eslint-disable-next-line operator-linebreak
-        clusterFilter.length > 0 &&
-        !output.clusters.some((c) => clusterFilter.includes(c))
-      ) {
-        logger.debug(`Maint not relevant, only matching for ${clusterFilter}`);
-        return;
-      }
-    }
 
     // If defined, identify Start/End Times
     const startIndex = item.description.indexOf('Start: ');
@@ -279,14 +130,6 @@ function parserService() {
     }</a></strong><blockquote class="${
       output.blockquote
     }"><strong>Status: </strong>${toTitleCase(status)}`;
-    if (output.clusters.length > 0) {
-      const clusters = output.clusters.join(', ');
-      if (clusters.includes(',')) {
-        html += `<br><strong>Clusters: </strong>${clusters}`;
-      } else {
-        html += `<br><strong>Cluster: </strong>${clusters}`;
-      }
-    }
     if (output.locations.length > 0) {
       const locations = output.locations.join(', ');
       if (locations.includes(',')) {
@@ -308,36 +151,16 @@ function parserService() {
     logger.debug('EVENT: INCIDENT');
     output.title = formatTitle(item.title);
     output.type = 'incident';
-    output.clusters = parseCluster(item.title);
     output.locations = parseLocation(item.description);
     output.description = formatDescription(item.description, status);
     output.blockquote = formatBlockquote(status);
     output.guid = item.guid;
-
-    if (output.clusters.length > 0) {
-      if (
-        // eslint-disable-next-line operator-linebreak
-        clusterFilter.length > 0 &&
-        !output.clusters.some((c) => clusterFilter.includes(c))
-      ) {
-        logger.debug(`Incident not relevant, only matching for ${clusterFilter}`);
-        return;
-      }
-    }
 
     let html = `<strong><a href=${output.guid}>${
       output.title
     }</a></strong><blockquote class="${
       output.blockquote
     }"><strong>Status: </strong>${toTitleCase(status)}`;
-    if (output.clusters.length > 0) {
-      const clusters = output.clusters.join(', ');
-      if (clusters.includes(',')) {
-        html += `<br><strong>Clusters: </strong>${output.clusters}`;
-      } else {
-        html += `<br><strong>Cluster: </strong>${output.clusters}`;
-      }
-    }
     if (output.locations.length > 0) {
       const locations = output.locations.join(', ');
       if (locations.includes(',')) {
@@ -356,20 +179,11 @@ function parserService() {
     logger.debug('EVENT: ANNOUNCEMENT');
     output.title = item.title;
     output.type = 'announcement';
-    output.clusters = parseCluster(item.title);
     output.description = formatDescription(item.description, 22);
     output.guid = item.guid.replace(/\r\n/g, '');
     output.link = item.link;
 
     let html = `<strong>${output.title}</strong><blockquote class="info">`;
-    if (output.clusters.length > 0) {
-      const clusters = output.clusters.join(', ');
-      if (clusters.includes(',')) {
-        html += `<br><strong>Clusters: </strong>${output.clusters}`;
-      } else {
-        html += `<br><strong>Cluster: </strong>${output.clusters}`;
-      }
-    }
     html += `<strong>Maintenance Calendar: </strong>${output.link}`;
     html += `<br><br>${output.description}`;
 
@@ -412,7 +226,6 @@ function parserService() {
   }
 
   return {
-    parseCluster,
     formatDescription,
     formatBlockquote,
     getBot,
