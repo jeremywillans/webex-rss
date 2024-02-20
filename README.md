@@ -4,9 +4,7 @@
 
 Webex RSS is a parser bot designed to enrich the data provided from the Webex RSS Feeds.
 
-It provides the following functions
-- Separates the feed content into three or four Webex Spaces (Incidents, Maintenance, Announcements and optionally Developer API)
-- Define a filter to limit based on a specific/set of clusters to monitor.
+It formats and posts the feed content into three or four Webex Spaces (Incidents, Maintenance, Announcements and optionally Developer API)
 
 ## Prerequisites
 1. Register a Bot at [Webex Developers](https://developer.webex.com/my-apps) for your Organization, noting the Token ID
