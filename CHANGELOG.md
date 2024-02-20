@@ -1,5 +1,10 @@
 # Changelog
 
+## 2.0.1
+- Remove Cluster parser
+- Refactor Location parsing
+- Fix severity vulnerabilities in dependencies
+
 ## 2.0.0
 - Implement HTTP Service, replacing Webex Dependency
 - Implement External Logging module
