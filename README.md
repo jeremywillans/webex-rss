@@ -44,7 +44,6 @@ These variables can be individually defined in Docker, or loaded as an `.env` fi
 | ANNOUNCE_ROOM | **Required** | ` ` | RoomId for Webex Announcement Space
 | API_ROOM | Optional | ` ` | RoomId for Webex Developer API Space
 | RSS_INTERVAL | Optional | `5` | Interval for RSS Checks (Minutes)
-| CLUSTER_FILTER | Optional | ` ` | Comma Separated List of Cluster Names to include.
 | **Logging Settings**
 | CONSOLE_LEVEL | no | bool | `info` | Logging level exposed to console
 | APP_NAME | no | string | `webex-rss` | App Name used for logging service
