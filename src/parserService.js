@@ -16,13 +16,11 @@ function parserService() {
   function parseLocation(description) {
     let locations = [];
     const startLoc = description.indexOf('Locations:</strong>');
-    const endLoc = description.indexOf(' </font><br /><br />', startLoc);
+    const endLoc = description.indexOf(' <br /><br />', startLoc);
     if (startLoc !== -1 && endLoc !== -1) {
-      locations = description.substring(startLoc + 20, endLoc);
-      if (locations === 'f') {
-        locations = 'F';
-      }
-      locations = locations.split(',');
+      // 227 equates for 'Locations:</strong></font> '
+      locations = description.substring(startLoc + 27, endLoc);
+      locations = locations.split(', ');
     }
     return locations;
   }
