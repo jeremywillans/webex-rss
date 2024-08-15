@@ -2,8 +2,8 @@ version: '3'
 
 services:
   webex-rss:
-    image: webex-rss:latest
-    build: .
+    image: jeremywillans/webex-rss:latest
+    #build: .
     container_name: webex-rss
     environment:
       # REPLACE BELOW WITH PREREQUISITE VARIABLES 
@@ -11,7 +11,6 @@ services:
       INC_ROOM: XXXXX
       MAINT_ROOM: XXXXX
       ANNOUNCE_ROOM: XXXXX
-      #DEVICE_ROOM: XXXXX # Optional - Pending
       #API_ROOM: XXXXX # Optional
       CONSOLE_LEVEL: info # Set Debug for detailed logging
     restart: unless-stopped

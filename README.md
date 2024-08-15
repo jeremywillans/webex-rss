@@ -26,9 +26,12 @@ It formats and posts the feed content into three or four Webex Spaces (Incidents
 The simplest deployment method is using [Docker](https://docs.docker.com/engine/install/) and [Docker Compose](https://docs.docker.com/compose/install/)
 
 1. Clone / Download repository
+   - Only docker-compose.yml is needed if using prebuilt docker image
 2. Update the included docker-compose.yml file with the correct Environmental parameters
-3. Provision and start the Integration using `docker-compose up -d`, image will be built on load
-4. Review the console logs using `docker logs webex-rss -f` (assuming you are using the default container name)
+3. - Use the prebuilt image available on Docker Hub (default in docker-compose.yml)
+   - Build local image - Uncomment build and comment image lines in docker-compose.yml
+4. Provision and start the service using `docker-compose up -d`
+5. Review the console logs using `docker logs webex-rss -f` (assuming you are using the default container name)
 
 ### Environmental Variables
 
