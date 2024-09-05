@@ -6,6 +6,8 @@ Webex RSS is a parser bot designed to enrich the data provided from the Webex RS
 
 It formats and posts the feed content into three or four Webex Spaces (Incidents, Maintenance, Announcements and optionally Developer API)
 
+**Note:** No initial messages will be published to the spaces when app is loaded. Only when a message is received on the RSS Feed it will be published into the respective space.
+
 ## Prerequisites
 1. Register a Bot at [Webex Developers](https://developer.webex.com/my-apps) for your Organization, noting the Token ID
 2. Create Spaces for Output Messages in Webex App, namely Incidents, Maintenance and Announcements (API as an optional)
@@ -29,7 +31,7 @@ The simplest deployment method is using [Docker](https://docs.docker.com/engine/
    - Only docker-compose.yml is needed if using prebuilt docker image
 2. Update the included docker-compose.yml file with the correct Environmental parameters
 3. - Use the prebuilt image available on Docker Hub (default in docker-compose.yml)
-   - Build local image - Uncomment build and comment image lines in docker-compose.yml
+   - Build local image - Uncomment build and comment image line in docker-compose.yml
 4. Provision and start the service using `docker-compose up -d`
 5. Review the console logs using `docker logs webex-rss -f` (assuming you are using the default container name)
 
