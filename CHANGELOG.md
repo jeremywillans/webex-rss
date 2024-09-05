@@ -1,5 +1,8 @@
 # Changelog
 
+## 2.0.2
+- Update dependencies
+
 ## 2.0.1
 - Remove Cluster parser
 - Refactor Location parsing
