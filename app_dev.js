@@ -20,8 +20,7 @@ const env = cleanEnv(process.env, {
   INC_ROOM: str(),
   MAINT_ROOM: str(),
   ANNOUNCE_ROOM: str(),
-  API_ROOM: str({ default: undefined }),
-  DEVICE_ROOM: str({ default: undefined }),
+  API_ROOM: str({ default: false }),
 });
 
 // Initialize Device Room Status
@@ -164,12 +163,14 @@ async function init() {
   //   logger.warn('WARN: Bot is not a member of the Device Room!');
   // }
   let apiEnabled = false;
-  try {
-    const apiRoom = await parserService.getRoom(process.env.API_ROOM);
-    logger.info(`API Room: ${apiRoom.title}`);
-    apiEnabled = true;
-  } catch (error) {
-    logger.warn('WARN: Bot is not a member of the API Room!');
+  if (env.API_ROOM) {
+    try {
+      const apiRoom = await parserService.getRoom(process.env.API_ROOM);
+      logger.info(`API Room: ${apiRoom.title}`);
+      apiEnabled = true;
+    } catch (error) {
+      logger.warn('WARN: Bot is not a member of the API Room!');
+    }
   }
   feeder.add({
     url: incidentFeed,
