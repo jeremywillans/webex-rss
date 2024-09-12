@@ -1,7 +1,7 @@
 const RssFeedEmitter = require('rss-feed-emitter');
 const { bootstrap } = require('global-agent');
 // eslint-disable-next-line object-curly-newline
-const { cleanEnv, str, bool, num } = require('envalid');
+const { cleanEnv, str, num } = require('envalid');
 const logger = require('./src/logger')('appDev');
 const { version } = require('./package.json');
 
@@ -15,17 +15,18 @@ if (process.env.GLOBAL_AGENT_HTTP_PROXY) {
 
 // Process ENV Parameters
 const env = cleanEnv(process.env, {
-  ANNOUNCE_DEVICE: bool({ default: false }),
   RSS_INTERVAL: num({ default: 5 }),
   INC_ROOM: str(),
   MAINT_ROOM: str(),
   ANNOUNCE_ROOM: str(),
   API_ROOM: str({ default: false }),
+  // DEVICE_ROOM: str({ default: undefined }),
+  // ANNOUNCE_DEVICE: bool({ default: false }),
 });
 
 // Initialize Device Room Status
-const deviceEnabled = false;
-const announceDevice = env.ANNOUNCE_DEVICE;
+// const deviceEnabled = false;
+// const announceDevice = env.ANNOUNCE_DEVICE;
 
 const parserService = require('./src/parserService');
 
@@ -95,14 +96,14 @@ feeder.on('announcement', (item) => {
     return;
   }
   logger.debug('new announce item');
-  if (deviceEnabled && item.title.match(/^RoomOS.*/)) {
-    logger.debug('matches device title string');
-    parserService.parseDevice(item);
-    if (!announceDevice) {
-      logger.debug('skip sending device to ann space');
-      return;
-    }
-  }
+  // if (deviceEnabled && item.title.match(/^RoomOS.*/)) {
+  //   logger.debug('matches device title string');
+  //   parserService.parseDevice(item);
+  //   if (!announceDevice) {
+  //     logger.debug('skip sending device to ann space');
+  //     return;
+  //   }
+  // }
   parserService.parseAnnouncement(item);
 });
 
