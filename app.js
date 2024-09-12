@@ -1,6 +1,6 @@
 const { bootstrap } = require('global-agent');
 // eslint-disable-next-line object-curly-newline
-const { cleanEnv, str, bool, num } = require('envalid');
+const { cleanEnv, str, num } = require('envalid');
 const Watcher = require('./lib/feedWatcher');
 const logger = require('./src/logger')('app');
 const { version } = require('./package.json');
@@ -13,17 +13,12 @@ if (process.env.GLOBAL_AGENT_HTTP_PROXY) {
 
 // Process ENV Parameters
 const env = cleanEnv(process.env, {
-  ANNOUNCE_DEVICE: bool({ default: false }),
   RSS_INTERVAL: num({ default: 5 }),
   INC_ROOM: str(),
   MAINT_ROOM: str(),
   ANNOUNCE_ROOM: str(),
   API_ROOM: str({ default: false }),
 });
-
-// Initialize Device Room Status
-const deviceEnabled = false;
-const announceDevice = env.ANNOUNCE_DEVICE;
 
 const parserService = require('./src/parserService');
 
@@ -93,14 +88,6 @@ maintenanceWatcher.on('new entries', (entries) => {
 announcementWatcher.on('new entries', (entries) => {
   entries.forEach((item) => {
     logger.debug('new announce item');
-    if (deviceEnabled && item.title.match(/^RoomOS.*/)) {
-      logger.debug('matches device, sending to device room also');
-      parserService.parseDevice(item);
-      if (!announceDevice) {
-        logger.debug('skip sending device to ann space');
-        return;
-      }
-    }
     parserService.parseAnnouncement(item);
   });
 });
@@ -160,19 +147,11 @@ async function init() {
   }
   try {
     const announceRoom = await parserService.getRoom(env.ANNOUNCE_ROOM);
-    // eslint-disable-next-line no-console
     logger.info(`Announce Room: ${announceRoom.title}`);
   } catch (error) {
     logger.error('ERROR: Bot is not a member of the Announcement Room!');
     process.exit(2);
   }
-  // try {
-  //   const deviceRoom = await parserService.getRoom(env.DEVICE_ROOM);
-  //   logger.info(`Device Room: ${deviceRoom.title}`);
-  //   deviceEnabled = true;
-  // } catch (error) {
-  //   logger.warn('WARN: Bot is not a member of the Device Room!');
-  // }
   let apiEnabled = false;
   if (env.API_ROOM) {
     try {
