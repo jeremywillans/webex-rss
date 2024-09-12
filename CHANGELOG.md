@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.0.3
+- Code refactor
+- Fix startup error if API undefined
+
 ## 2.0.2
 - Update dependencies
 
