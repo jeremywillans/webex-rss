@@ -18,11 +18,23 @@ function parserService() {
     const startLoc = description.indexOf('Locations:</strong>');
     const endLoc = description.indexOf(' <br /><br />', startLoc);
     if (startLoc !== -1 && endLoc !== -1) {
-      // 227 equates for 'Locations:</strong></font> '
+      // 27 equates for 'Locations:</strong></font> '
       locations = description.substring(startLoc + 27, endLoc);
       locations = locations.split(', ');
     }
     return locations;
+  }
+
+  function parseRegion(description) {
+    let regions = [];
+    const startLoc = description.indexOf('Regions:</strong>');
+    const endLoc = description.indexOf(' <br /><br />', startLoc);
+    if (startLoc !== -1 && endLoc !== -1) {
+      // 25 equates for 'Regions:</strong></font> '
+      regions = description.substring(startLoc + 25, endLoc);
+      regions = regions.split(', ');
+    }
+    return regions;
   }
 
   function formatDescription(description, status) {
@@ -101,6 +113,7 @@ function parserService() {
     output.title = formatTitle(item.title);
     output.type = 'maintenance';
     output.locations = parseLocation(item.description);
+    output.regions = parseRegion(item.description);
 
     // If defined, identify Start/End Times
     const startIndex = item.description.indexOf('Start: ');
@@ -136,6 +149,14 @@ function parserService() {
         html += `<br><strong>Location: </strong>${locations}`;
       }
     }
+    if (output.regions.length > 0) {
+      const regions = output.regions.join(', ');
+      if (regions.includes(',')) {
+        html += `<br><strong>Regions: </strong>${regions}`;
+      } else {
+        html += `<br><strong>Region: </strong>${regions}`;
+      }
+    }
     if (output.startTime && output.endTime) {
       html += `<br><strong>Start: </strong>${output.startTime}<br><strong>End: </strong>${output.endTime}`;
     }
@@ -150,6 +171,7 @@ function parserService() {
     output.title = formatTitle(item.title);
     output.type = 'incident';
     output.locations = parseLocation(item.description);
+    output.regions = parseRegion(item.description);
     output.description = formatDescription(item.description, status);
     output.blockquote = formatBlockquote(status);
     output.guid = item.guid;
@@ -165,6 +187,14 @@ function parserService() {
         html += `<br><strong>Locations: </strong>${locations}`;
       } else {
         html += `<br><strong>Location: </strong>${locations}`;
+      }
+    }
+    if (output.regions.length > 0) {
+      const regions = output.regions.join(', ');
+      if (regions.includes(',')) {
+        html += `<br><strong>Regions: </strong>${regions}`;
+      } else {
+        html += `<br><strong>Region: </strong>${regions}`;
       }
     }
     html += `<br><br>${output.description}`;
