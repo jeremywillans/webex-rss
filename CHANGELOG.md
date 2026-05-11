@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.1.0
+- Add Region support
+- Update dependencies
+
 ## 2.0.3
 - Code refactor
 - Fix startup error if API undefined
