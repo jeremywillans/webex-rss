@@ -52,6 +52,10 @@ function parserService() {
     formatted = formatted.replace(/\r?\n|\r/g, '<br />');
     formatted = formatted.replace(/<strong>-- /g, '<strong>');
     formatted = formatted.replace(/ --<\/strong>/g, '</strong>');
+    formatted = formatted.replace(
+      /<a href="https:\/\/help\.webex\.com\.">https:\/\/help\.webex\.com\.<\/a>/gi,
+      '<a href="https://help.webex.com">https://help.webex.com</a>.',
+    );
     return formatted;
   }
 
