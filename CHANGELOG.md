@@ -2,6 +2,7 @@
 
 ## 2.1.1
 - Fix trailing period in Webex Help links
+- Pin Postman Request for UUID 11 compatibility
 
 ## 2.1.0
 - Add Region support
