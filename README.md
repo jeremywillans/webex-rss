@@ -35,6 +35,16 @@ The simplest deployment method is using [Docker](https://docs.docker.com/engine/
 4. Provision and start the service using `docker-compose up -d`
 5. Review the console logs using `docker logs webex-rss -f` (assuming you are using the default container name)
 
+### Building an image
+
+Use Docker to build the image:
+
+```bash
+npm run build:image -- -t jeremywillans/webex-rss:latest .
+```
+
+This command always checks for and pulls the latest `node:26-alpine` base image before building. Rebuild the image and recreate your containers to apply updates.
+
 ### Environmental Variables
 
 These variables can be individually defined in Docker, or loaded as an `.env` file in the `/app` directory.

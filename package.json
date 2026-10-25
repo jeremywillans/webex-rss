@@ -5,6 +5,7 @@
   "main": "app.js",
   "scripts": {
     "start": "node app.js",
+    "build:image": "docker build --pull",
     "test": "node --test",
     "dev": "nodemon app_dev.js",
     "prod": "nodemon app.js"
